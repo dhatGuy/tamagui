@@ -1,5 +1,5 @@
 import { isWeb } from '@tamagui/constants'
-import React, { memo, useMemo } from 'react'
+import { memo, useMemo } from 'react'
 
 import { variableToString } from '../createVariable'
 import { ThemeManager, ThemeManagerContext } from '../helpers/ThemeManager'
