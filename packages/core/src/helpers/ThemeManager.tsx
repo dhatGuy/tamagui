@@ -30,10 +30,11 @@ export class ThemeManager {
   listeners = new Map<any, Function>()
   themeListeners = new Set<ThemeListener>()
   theme: ThemeParsed | null = null
-  parentManager: ThemeManager = emptyManager
+  parentManager: ThemeManager | null = null
   state: ThemeManagerState = emptyState
 
   constructor(public originalParentManager?: ThemeManager | undefined, public props?: ThemeProps) {
+    this.parentManager = originalParentManager || null
     this.update(props)
   }
 
@@ -138,7 +139,7 @@ export class ThemeManager {
       }
     }
 
-    const parentIsReset = this.parentManager.props?.reset
+    const parentIsReset = this.parentManager?.props?.reset
 
     if (!name) {
       if (componentName) {
@@ -260,6 +261,5 @@ export class ThemeManager {
 }
 
 export const ThemeManagerContext = createContext<ThemeManager | null>(null)
-export const emptyManager = new ThemeManager()
 
 const withoutComponentName = (name: string) => name.replace(/(_[A-Z][a-zA-Z]+)+$/g, '')

@@ -6,7 +6,7 @@ import { getConfig } from '../config'
 import { isDevTools } from '../constants/isDevTools'
 import { areEqualSets } from '../helpers/areEqualSets'
 import { createProxy } from '../helpers/createProxy'
-import { ThemeManager, ThemeManagerContext, emptyManager } from '../helpers/ThemeManager'
+import { ThemeManager, ThemeManagerContext } from '../helpers/ThemeManager'
 import { ThemeName, ThemeParsed, ThemeProps } from '../types'
 import { GetThemeUnwrapped } from './getThemeUnwrapped'
 import { useServerRef } from './useServerHooks'
@@ -214,7 +214,7 @@ export const useChangeThemeEffect = (
     }
   }
 
-  const parentManager = useContext(ThemeManagerContext) || emptyManager
+  const parentManager = useContext(ThemeManagerContext) || new ThemeManager()
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const forceUpdate = forceUpdateProp || useForceUpdate()
@@ -226,8 +226,9 @@ export const useChangeThemeEffect = (
   }, [])
 
   // not concurrent safe but fixes native (but breaks SSR and not needed on web (i think) so leave only on native)
-  const didChange =
+  const didChange = Boolean(
     themeManager.parentManager && themeManager.getKey() !== themeManager.parentManager.getKey()
+  )
   if (process.env.TAMAGUI_TARGET === 'native') {
     if (didChange) {
       themeManager.update(props, false, false)

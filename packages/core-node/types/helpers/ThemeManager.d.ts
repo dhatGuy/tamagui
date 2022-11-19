@@ -20,7 +20,7 @@ export declare class ThemeManager {
     listeners: Map<any, Function>;
     themeListeners: Set<ThemeListener>;
     theme: ThemeParsed | null;
-    parentManager: ThemeManager;
+    parentManager: ThemeManager | null;
     state: ThemeManagerState;
     constructor(originalParentManager?: ThemeManager | undefined, props?: ThemeProps | undefined);
     get didChangeTheme(): boolean | undefined;
