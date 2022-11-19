@@ -23,12 +23,14 @@ export declare class ThemeManager {
     parentManager: ThemeManager;
     state: ThemeManagerState;
     constructor(originalParentManager?: ThemeManager | undefined, props?: ThemeProps | undefined);
-    get didChangeTheme(): boolean;
+    get didChangeTheme(): boolean | undefined;
     get parentName(): string | null;
     get fullName(): string;
     getValue(key: string): import("..").Variable<any> | undefined;
     isTracking(uuid: Object): boolean;
-    update(props?: ThemeProps, force?: boolean, notify?: boolean): boolean;
+    update(props?: ThemeProps & {
+        forceTheme?: ThemeParsed;
+    }, force?: boolean, notify?: boolean): boolean;
     findNearestDifferingParentManager(): void;
     getKey(props?: ThemeProps | undefined): string;
     getState(props?: ThemeProps | undefined): ThemeManagerState | null;

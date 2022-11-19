@@ -164,17 +164,17 @@ export function useThemeName(opts?: { parent?: true }): ThemeName {
     const config = getConfig()
     return config.themes[Object.keys(config.themes)[0]] as any
   }
-  const parent = useContext(ThemeManagerContext)
-  const [name, setName] = useState(parent?.name || '')
+  const manager = useContext(ThemeManagerContext)
+  const [name, setName] = useState(manager?.state.name || '')
 
   useIsomorphicLayoutEffect(() => {
-    if (!parent) return
-    return parent.onChangeTheme((next, manager) => {
+    if (!manager) return
+    return manager.onChangeTheme((next, manager) => {
       const name = opts?.parent ? manager.parentName || next : next
       if (!name) return
       setName(name)
     })
-  }, [parent])
+  }, [manager])
 
   return name
 }
@@ -208,7 +208,7 @@ export const useChangeThemeEffect = (
     // we need context working for this to work well
     const next = new ThemeManager(undefined, props)
     return {
-      ...next,
+      ...next.state,
       themes,
       themeManager: null,
     }
@@ -226,11 +226,11 @@ export const useChangeThemeEffect = (
   }, [])
 
   // not concurrent safe but fixes native (but breaks SSR and not needed on web (i think) so leave only on native)
-  let didChange = false
+  const didChange =
+    themeManager.parentManager && themeManager.getKey() !== themeManager.parentManager.getKey()
   if (process.env.TAMAGUI_TARGET === 'native') {
-    didChange = Boolean(JSON.stringify(themeManager.props) !== JSON.stringify())
     if (didChange) {
-      themeManager.update(next, false, false)
+      themeManager.update(props, false, false)
     }
   }
 
@@ -247,7 +247,7 @@ export const useChangeThemeEffect = (
           }
           if (process.env.NODE_ENV === 'development' && debug) {
             // eslint-disable-next-line no-console
-            console.log('Changed theme', componentName, next, props)
+            console.log('Changed theme', componentName, themeManager.state, props)
           }
           forceUpdate()
         }
@@ -261,8 +261,7 @@ export const useChangeThemeEffect = (
     }, [
       didChange,
       themes,
-      next?.name,
-      next?.className,
+      themeManager.getKey(),
       componentName,
       debug,
       props.name,
@@ -273,11 +272,14 @@ export const useChangeThemeEffect = (
 
   return {
     ...(parentManager && {
-      name: parentManager.name,
-      theme: parentManager.theme,
+      name: parentManager.state.name,
+      theme: parentManager.state.theme,
     }),
-    ...next,
-    className: next.className === parentManager.className ? undefined : next.className,
+    ...themeManager.state,
+    className:
+      themeManager.state.className === parentManager.state.className
+        ? undefined
+        : themeManager.state.className,
     themes,
     themeManager,
   }

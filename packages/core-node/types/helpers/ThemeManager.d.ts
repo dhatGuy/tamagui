@@ -8,28 +8,32 @@ export declare type SetActiveThemeProps = {
     theme?: any;
     reset?: boolean;
 };
-declare type NextTheme = {
+declare type ThemeManagerState = {
     name: string;
     theme?: ThemeParsed | null;
     className?: string;
 };
 export declare class ThemeManager {
-    parentManager?: ThemeManager | undefined;
+    originalParentManager?: ThemeManager | undefined;
+    props?: ThemeProps | undefined;
     keys: Map<any, Set<string>>;
     listeners: Map<any, Function>;
     themeListeners: Set<ThemeListener>;
-    name: string;
-    className: string;
     theme: ThemeParsed | null;
-    reset: boolean;
-    constructor(parentManager?: ThemeManager | undefined);
+    parentManager: ThemeManager;
+    state: ThemeManagerState;
+    constructor(originalParentManager?: ThemeManager | undefined, props?: ThemeProps | undefined);
     get didChangeTheme(): boolean | undefined;
     get parentName(): string | null;
     get fullName(): string;
     getValue(key: string): import("..").Variable<any> | undefined;
     isTracking(uuid: Object): boolean;
-    update({ name, theme, className, reset }?: SetActiveThemeProps, force?: boolean, notify?: boolean): boolean;
-    getNextTheme(props?: ThemeProps, debug?: any): NextTheme;
+    update(props?: ThemeProps & {
+        forceTheme?: ThemeParsed;
+    }, force?: boolean, notify?: boolean): boolean;
+    findNearestDifferingParentManager(): void;
+    getKey(props?: ThemeProps | undefined): string;
+    getState(props?: ThemeProps | undefined): ThemeManagerState | null;
     getCN(name: string, disableRemoveScheme?: boolean): string;
     track(uuid: any, keys: Set<string>): void;
     notify(): void;

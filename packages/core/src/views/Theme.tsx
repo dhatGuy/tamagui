@@ -7,7 +7,6 @@ import { useChangeThemeEffect } from '../hooks/useTheme'
 import { ThemeProps } from '../types'
 
 export const Theme = memo(function Theme(props: ThemeProps) {
-  console.log('Theme.render', props, useContext(ThemeManagerContext))
   const { name, theme, themeManager, themes, className } = useChangeThemeEffect(props)
 
   const missingTheme = !themes || !name || !theme

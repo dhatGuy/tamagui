@@ -38,7 +38,7 @@ export class ThemeManager {
   }
 
   get didChangeTheme() {
-    return this.parentManager && this.name !== this.parentManager.fullName
+    return this.originalParentManager && this.fullName !== this.originalParentManager.fullName
   }
 
   get parentName() {
@@ -70,17 +70,20 @@ export class ThemeManager {
     return Boolean(this.keys.get(uuid)?.size)
   }
 
-  update(props: ThemeProps = {}, force = false, notify = true) {
+  update(props: ThemeProps & { forceTheme?: ThemeParsed } = {}, force = false, notify = true) {
     const avoidUpdate = force && this.getKey(props) === this.getKey()
     this.props = props
-    if (!avoidUpdate) {
+    if (props.forceTheme) {
+      this.theme = props.forceTheme
+      this.state.name = props.name || ''
+      notify && this.notify()
+      return true
+    } else if (!avoidUpdate) {
       this.findNearestDifferingParentManager()
       const nextState = this.getState(props)
       if (nextState) {
         this.state = nextState
-        if (notify) {
-          this.notify()
-        }
+        notify && this.notify()
         return true
       }
     }
@@ -135,12 +138,15 @@ export class ThemeManager {
       }
     }
 
-    const parentIsReset = this.parentManager?.reset
+    const parentIsReset = this.parentManager.props?.reset
 
     if (!name) {
       if (componentName) {
         // allow for _Card_Button or just _Button
-        let names = [`${name}_${componentName}`, `${withoutComponentName(name)}_${componentName}`]
+        let names = [
+          `${this.state.name}_${componentName}`,
+          `${withoutComponentName(this.state.name)}_${componentName}`,
+        ]
         if (props.inverse && !isWeb) {
           names = names.map((name) => inverseTheme(name))
         }
@@ -152,7 +158,7 @@ export class ThemeManager {
         }
       }
       if (props.inverse && !isWeb) {
-        const name = inverseTheme(this.name)
+        const name = inverseTheme(props.name || this.state.name)
         if (!(name in themes)) {
           throw new Error(`No theme inverse found`)
         }
@@ -162,14 +168,10 @@ export class ThemeManager {
           theme: themes[name],
         }
       }
-      return {
-        name: this.name,
-        theme: this.theme,
-        className: this.className,
-      }
+      return this.state
     }
 
-    let nextName = parentIsReset ? this.parentName || '' : name || this.name || ''
+    let nextName = parentIsReset ? this.parentName || '' : name || this.state.name || ''
     if (props.inverse && !isWeb) {
       nextName = inverseTheme(nextName)
     }
@@ -233,12 +235,12 @@ export class ThemeManager {
   }
 
   track(uuid: any, keys: Set<string>) {
-    if (!this.name) return
+    if (!this.state.name) return
     this.keys.set(uuid, keys)
   }
 
   notify() {
-    if (!this.name) {
+    if (!this.state.name) {
       this.keys.clear()
     }
     for (const [uuid, keys] of this.keys.entries()) {
@@ -246,7 +248,7 @@ export class ThemeManager {
         this.listeners.get(uuid)?.()
       }
     }
-    this.themeListeners.forEach((cb) => cb(this.name, this))
+    this.themeListeners.forEach((cb) => cb(this.state.name, this))
   }
 
   onChangeTheme(cb: ThemeListener) {
