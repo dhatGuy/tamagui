@@ -40,6 +40,5 @@ export declare class ThemeManager {
     onChangeTheme(cb: ThemeListener): () => void;
 }
 export declare const ThemeManagerContext: import("react").Context<ThemeManager | null>;
-export declare const emptyManager: ThemeManager;
 export {};
 //# sourceMappingURL=ThemeManager.d.ts.map

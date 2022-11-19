@@ -180,6 +180,7 @@ export function useThemeName(opts?: { parent?: true }): ThemeName {
 }
 
 export const activeThemeManagers = new Set<ThemeManager>()
+let defaultManager: ThemeManager | null = null
 
 export const useChangeThemeEffect = (
   props: UseThemeProps,
@@ -214,7 +215,11 @@ export const useChangeThemeEffect = (
     }
   }
 
-  const parentManager = useContext(ThemeManagerContext) || new ThemeManager()
+  let parentManager = useContext(ThemeManagerContext) as ThemeManager
+  if (!parentManager) {
+    defaultManager ||= new ThemeManager()
+    parentManager = defaultManager
+  }
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const forceUpdate = forceUpdateProp || useForceUpdate()

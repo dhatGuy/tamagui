@@ -2,7 +2,7 @@ import { isWeb } from '@tamagui/constants'
 import { createContext } from 'react'
 
 import { getThemes } from '../config'
-import { THEME_CLASSNAME_PREFIX, THEME_NAME_SEPARATOR } from '../constants/constants'
+import { THEME_CLASSNAME_PREFIX } from '../constants/constants'
 import { getThemeUnwrapped } from '../hooks/getThemeUnwrapped'
 import { ThemeParsed, ThemeProps } from '../types'
 import { inverseTheme } from '../views/ThemeInverse'
