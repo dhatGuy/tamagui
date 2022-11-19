@@ -8,9 +8,8 @@ export declare const getThemeManager: (theme: any) => ThemeManager | undefined;
 export declare function useThemeName(opts?: {
     parent?: true;
 }): ThemeName;
-export declare const useDefaultThemeName: () => string | undefined;
 export declare const activeThemeManagers: Set<ThemeManager>;
-export declare const useChangeThemeEffect: (props?: UseThemeProps, uuid?: Object) => {
+export declare const useChangeThemeEffect: (props: UseThemeProps, uuid?: Object) => {
     themes: Record<string, ThemeParsed>;
     themeManager: ThemeManager | null;
     name: string;

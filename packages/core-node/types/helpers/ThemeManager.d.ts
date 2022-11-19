@@ -6,6 +6,7 @@ export declare type SetActiveThemeProps = {
     parentManager?: ThemeManager | null;
     name?: string | null;
     theme?: any;
+    reset?: boolean;
 };
 declare type NextTheme = {
     name: string;
@@ -14,20 +15,20 @@ declare type NextTheme = {
 };
 export declare class ThemeManager {
     parentManager?: ThemeManager | undefined;
-    reset: boolean;
     keys: Map<any, Set<string>>;
     listeners: Map<any, Function>;
     themeListeners: Set<ThemeListener>;
     name: string;
     className: string;
     theme: ThemeParsed | null;
-    constructor(props?: Partial<NextTheme> | undefined, parentManager?: ThemeManager | undefined, reset?: boolean);
+    reset: boolean;
+    constructor(parentManager?: ThemeManager | undefined);
     get didChangeTheme(): boolean | undefined;
     get parentName(): string | null;
     get fullName(): string;
     getValue(key: string): import("..").Variable<any> | undefined;
     isTracking(uuid: Object): boolean;
-    update({ name, theme, className }?: SetActiveThemeProps, force?: boolean, notify?: boolean): boolean;
+    update({ name, theme, className, reset }?: SetActiveThemeProps, force?: boolean, notify?: boolean): boolean;
     getNextTheme(props?: ThemeProps, debug?: any): NextTheme;
     getCN(name: string, disableRemoveScheme?: boolean): string;
     track(uuid: any, keys: Set<string>): void;

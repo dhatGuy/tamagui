@@ -1,5 +1,5 @@
 import { isWeb } from '@tamagui/constants'
-import { memo, useMemo } from 'react'
+import { memo, useContext, useMemo } from 'react'
 
 import { variableToString } from '../createVariable'
 import { ThemeManager, ThemeManagerContext } from '../helpers/ThemeManager'
@@ -7,6 +7,7 @@ import { useChangeThemeEffect } from '../hooks/useTheme'
 import { ThemeProps } from '../types'
 
 export const Theme = memo(function Theme(props: ThemeProps) {
+  console.log('Theme.render', props, useContext(ThemeManagerContext))
   const { name, theme, themeManager, themes, className } = useChangeThemeEffect(props)
 
   const missingTheme = !themes || !name || !theme
@@ -19,9 +20,11 @@ export const Theme = memo(function Theme(props: ThemeProps) {
   )
 
   if (missingTheme) {
-    if (name && !theme && process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.warn(`No theme found by name ${name}`)
+    if (process.env.NODE_ENV === 'development') {
+      if (name && !theme) {
+        // eslint-disable-next-line no-console
+        console.warn(`No theme found by name ${name}`)
+      }
     }
     return props.children
   }
@@ -64,7 +67,10 @@ export function wrapThemeManagerContext(
   themeManager?: ThemeManager | null,
   shouldSetChildrenThemeToParent?: boolean
 ) {
-  return themeManager ? (
+  if (!themeManager) {
+    return children
+  }
+  return (
     <ThemeManagerContext.Provider value={themeManager}>
       {shouldSetChildrenThemeToParent ? (
         <Theme name={themeManager.parentName}>{children}</Theme>
@@ -72,7 +78,5 @@ export function wrapThemeManagerContext(
         children
       )}
     </ThemeManagerContext.Provider>
-  ) : (
-    children
   )
 }

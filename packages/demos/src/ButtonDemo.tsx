@@ -3,13 +3,18 @@ import { Button, XGroup, XStack, YStack } from 'tamagui'
 
 export function ButtonDemo(props) {
   return (
+    <Button debug="verbose" w="50%" theme="alt2">
+      Alt2
+    </Button>
+  )
+  return (
     <YStack p="$3" space {...props}>
       <Button>Plain</Button>
       <Button als="center" icon={Airplay} size="$6">
         Large
       </Button>
       <XGroup size="$3">
-        <Button w="50%" theme="alt2">
+        <Button debug="verbose" w="50%" theme="alt2">
           Alt2
         </Button>
         <Button w="50%" theme="yellow">

@@ -4,7 +4,6 @@ import React, { useContext, useLayoutEffect, useMemo, useRef, useState } from 'r
 
 import { getConfig } from '../config'
 import { isDevTools } from '../constants/isDevTools'
-import { ThemeContext } from '../contexts/ThemeContext'
 import { areEqualSets } from '../helpers/areEqualSets'
 import { createProxy } from '../helpers/createProxy'
 import { ThemeManager, ThemeManagerContext, emptyManager } from '../helpers/ThemeManager'
@@ -22,7 +21,7 @@ type UseThemeProps = ThemeProps & {
   forceUpdate?: any
 }
 
-export const useTheme = (props?: UseThemeProps): ThemeParsed => {
+export const useTheme = (props: UseThemeProps = { name: null }): ThemeParsed => {
   // TODO this can use useChangeThemeEffect almost ready
   if (isRSC) {
     const config = getConfig()
@@ -180,14 +179,10 @@ export function useThemeName(opts?: { parent?: true }): ThemeName {
   return name
 }
 
-export const useDefaultThemeName = () => {
-  return useContext(ThemeContext)?.defaultTheme
-}
-
 export const activeThemeManagers = new Set<ThemeManager>()
 
 export const useChangeThemeEffect = (
-  props: UseThemeProps = { name: null },
+  props: UseThemeProps,
   uuid?: Object
 ): {
   themes: Record<string, ThemeParsed>
@@ -206,13 +201,12 @@ export const useChangeThemeEffect = (
     }
   }
 
-  const { name, componentName, reset, debug, forceUpdate: forceUpdateProp } = props
+  const { name, componentName, debug, forceUpdate: forceUpdateProp } = props
   const { themes } = config
 
   if (isRSC) {
     // we need context working for this to work well
-    const parentManager = new ThemeManager()
-    const next = parentManager.getNextTheme(props)
+    const next = new ThemeManager(undefined, props)
     return {
       ...next,
       themes,
@@ -221,22 +215,20 @@ export const useChangeThemeEffect = (
   }
 
   const parentManager = useContext(ThemeManagerContext) || emptyManager
-  const next = parentManager.getNextTheme(props, debug)
+
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const forceUpdate = forceUpdateProp || useForceUpdate()
 
   // only create once we update it in the effect
   const themeManager = useMemo(() => {
-    return new ThemeManager(next, parentManager, reset)
+    return new ThemeManager(parentManager, props)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // not concurrent safe but fixes native (but breaks SSR and not needed on web (i think) so leave only on native)
   let didChange = false
   if (process.env.TAMAGUI_TARGET === 'native') {
-    didChange = Boolean(
-      next?.name !== themeManager.name || next?.className !== themeManager.className
-    )
+    didChange = Boolean(JSON.stringify(themeManager.props) !== JSON.stringify())
     if (didChange) {
       themeManager.update(next, false, false)
     }
@@ -244,13 +236,11 @@ export const useChangeThemeEffect = (
 
   if (!isServer) {
     useLayoutEffect(() => {
-      themeManager.update(next, didChange)
+      themeManager.update(props, didChange)
       activeThemeManagers.add(themeManager)
 
       const disposeParentOnChange = parentManager.onChangeTheme(() => {
-        const next = parentManager.getNextTheme(props, debug)
-        if (!next) return
-        if (themeManager.update(next)) {
+        if (themeManager.update(props)) {
           if (uuid && !themeManager.isTracking(uuid)) {
             // no need to re-render if not tracking any keys
             return

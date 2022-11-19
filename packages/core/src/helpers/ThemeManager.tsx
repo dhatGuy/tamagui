@@ -14,59 +14,27 @@ export type SetActiveThemeProps = {
   parentManager?: ThemeManager | null
   name?: string | null
   theme?: any
+  reset?: boolean
 }
 
-type NextTheme = {
+type ThemeManagerState = {
   name: string
   theme?: ThemeParsed | null
   className?: string
 }
 
+const emptyState: ThemeManagerState = { name: '' }
+
 export class ThemeManager {
   keys = new Map<any, Set<string>>()
   listeners = new Map<any, Function>()
   themeListeners = new Set<ThemeListener>()
-
-  name = ''
-  className = ''
   theme: ThemeParsed | null = null
+  parentManager: ThemeManager = emptyManager
+  state: ThemeManagerState = emptyState
 
-  constructor(
-    props?: Partial<NextTheme> | undefined,
-    public parentManager?: ThemeManager | undefined,
-    public reset: boolean = false
-  ) {
-    this.name = props?.name || parentManager?.name || ''
-    this.className = props?.className || parentManager?.className || ''
-    this.theme = props?.theme || parentManager?.theme || null
-
-    if (!parentManager || !props || !props.name) {
-      return
-    }
-
-    const next = parentManager.getNextTheme({
-      ...props,
-      name: props.name,
-    })
-
-    // find the nearest different parentManager
-    let parent = parentManager
-    let tries = 0
-    while (true) {
-      if (++tries > 10) {
-        throw new Error(`Nested 10 theme changes in a row`)
-      }
-      if (!parent || !parent.name) break
-      if (parent.name === next.name) {
-        if (parent.parentManager) {
-          // go up if same
-          parent = parent.parentManager
-        }
-      } else {
-        this.parentManager = parent
-        break
-      }
-    }
+  constructor(public originalParentManager?: ThemeManager | undefined, public props?: ThemeProps) {
+    this.update(props)
   }
 
   get didChangeTheme() {
@@ -74,15 +42,11 @@ export class ThemeManager {
   }
 
   get parentName() {
-    return this.parentManager?.name || null
+    return this.parentManager?.state.name || null
   }
 
   get fullName(): string {
-    return this.getNextTheme().name || this.name || ''
-    // const parentName = this.parentManager?.fullName || ''
-    // const name = this.name || ''
-    // const parts = [...new Set([...`${parentName}_${name}`.split('_')])].filter(Boolean)
-    // return parts.join('_')
+    return this.state?.name || this.props?.name || ''
   }
 
   // gets value going up to parents
@@ -96,9 +60,7 @@ export class ThemeManager {
       }
       if (this.parentManager) {
         manager = this.parentManager
-        if (!manager || manager.theme === theme) {
-          return
-        }
+        if (!manager) return
         theme = manager.theme
       }
     }
@@ -108,24 +70,60 @@ export class ThemeManager {
     return Boolean(this.keys.get(uuid)?.size)
   }
 
-  update({ name, theme, className }: SetActiveThemeProps = {}, force = false, notify = true) {
-    if (!force) {
-      // className compare on web, avoids light/dark re-renders
-      const nameChanged = name !== this.name
-      if (!nameChanged) {
-        return false
+  update(props: ThemeProps = {}, force = false, notify = true) {
+    const avoidUpdate = force && this.getKey(props) === this.getKey()
+    this.props = props
+    if (!avoidUpdate) {
+      this.findNearestDifferingParentManager()
+      const nextState = this.getState(props)
+      if (nextState) {
+        this.state = nextState
+        if (notify) {
+          this.notify()
+        }
+        return true
       }
     }
-    this.className = className || ''
-    this.name = name || ''
-    this.theme = theme
-    if (notify) {
-      this.notify()
-    }
-    return true
+    return false
   }
 
-  getNextTheme(props: ThemeProps = {}, debug?: any): NextTheme {
+  findNearestDifferingParentManager() {
+    if (!this.originalParentManager || !this.props) return
+    // find the nearest different parentManager
+    let parent = this.originalParentManager
+    let tries = 0
+    while (true) {
+      if (++tries > 10) {
+        throw new Error(`Nested 10 theme changes in a row`)
+      }
+      if (!parent || !parent.state.name) break
+      if (parent.state.name === this.state.name) {
+        if (parent.parentManager) {
+          // go up if same
+          parent = parent.parentManager
+        }
+      } else {
+        this.parentManager = parent
+        break
+      }
+    }
+  }
+
+  getKey(props: ThemeProps | undefined = this.props) {
+    if (!props) {
+      if (process.env.NODE_ENV === 'development') {
+        throw new Error(`No props given to ThemeManager.getKey()`)
+      }
+      return ``
+    }
+    return `${props.name}${props.inverse}${props.reset}${props.componentName}`
+  }
+
+  getState(props: ThemeProps | undefined = this.props): ThemeManagerState | null {
+    if (!props) {
+      return null
+    }
+
     const themes = getThemes()
     const { name, componentName } = props
 
@@ -142,10 +140,7 @@ export class ThemeManager {
     if (!name) {
       if (componentName) {
         // allow for _Card_Button or just _Button
-        let names = [
-          `${this.name}_${componentName}`,
-          `${withoutComponentName(this.name)}_${componentName}`,
-        ]
+        let names = [`${name}_${componentName}`, `${withoutComponentName(name)}_${componentName}`]
         if (props.inverse && !isWeb) {
           names = names.map((name) => inverseTheme(name))
         }
@@ -178,19 +173,27 @@ export class ThemeManager {
     if (props.inverse && !isWeb) {
       nextName = inverseTheme(nextName)
     }
-    let parentName = this.parentName || this.fullName
 
-    if (!parentIsReset) {
-      while (true) {
-        if (nextName in themes) break
-        nextName = `${parentName}_${name}`
-        if (nextName in themes) break
-        // this is fine - some themes can not have parents
-        if (!parentName.includes(THEME_NAME_SEPARATOR)) break
-        // go up one
-        parentName = parentName.slice(0, parentName.lastIndexOf(THEME_NAME_SEPARATOR))
+    if (this.parentName) {
+      const subName = `${this.parentName}_${nextName}`
+      if (subName in themes) {
+        nextName = subName
       }
     }
+
+    // let parentName = this.parentName || this.fullName
+    // console.log('starts with', { parentName, nextName })
+    // if (!parentIsReset) {
+    //   while (true) {
+    //     // if (nextName in themes) break
+    //     nextName = `${parentName}_${name}`
+    //     if (nextName in themes) break
+    //     // this is fine - some themes can not have parents
+    //     if (!parentName.includes(THEME_NAME_SEPARATOR)) break
+    //     // go up one
+    //     parentName = parentName.slice(0, parentName.lastIndexOf(THEME_NAME_SEPARATOR))
+    //   }
+    // }
 
     if (componentName) {
       // allow for _Card_Button or just _Button
@@ -201,12 +204,15 @@ export class ThemeManager {
       if (props.inverse && !isWeb) {
         names = names.map((name) => inverseTheme(name))
       }
+      // console.log('getin', names)
       for (const name of names) {
         if (name in themes) {
           nextName = name
         }
       }
     }
+
+    // console.log('gots', { nextName, parent: this.parentManager?.name })
 
     let theme = themes[nextName]
     if (!theme) {

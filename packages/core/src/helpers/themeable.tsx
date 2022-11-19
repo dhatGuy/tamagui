@@ -1,7 +1,8 @@
-import React, { forwardRef } from 'react'
+import React, { forwardRef, useContext } from 'react'
 
 import { ThemeName } from '../types'
 import { Theme } from '../views/Theme'
+import { ThemeManagerContext } from './ThemeManager'
 
 export interface ThemeableProps {
   theme?: ThemeName | null
@@ -15,6 +16,7 @@ export function themeable<Component extends (props: any) => any>(
   const withThemeComponent = forwardRef(function WithTheme(props: any, ref) {
     const { themeInverse, theme, componentName, ...rest } = props
     const element = React.createElement(component, { ...rest, ref } as any)
+    console.warn('rendering themable', useContext(ThemeManagerContext))
     return (
       <Theme
         inverse={themeInverse}

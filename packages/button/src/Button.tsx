@@ -48,8 +48,10 @@ export type ButtonProps = Omit<TextParentStyles, 'TextComponent'> &
     scaleSpace?: number
   }
 
+const NAME = 'Button'
+
 export const ButtonFrame = styled(ThemeableStack, {
-  name: 'Button',
+  name: NAME,
   tag: 'button',
   focusable: true,
   hoverTheme: true,
@@ -214,4 +216,7 @@ export const buttonStaticConfig = {
   ]),
 }
 
-export const Button = ButtonFrame.extractable(themeable(ButtonComponent), buttonStaticConfig)
+export const Button = ButtonFrame.extractable(
+  themeable(ButtonComponent, { componentName: NAME }),
+  buttonStaticConfig
+)
