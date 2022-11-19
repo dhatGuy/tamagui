@@ -72,7 +72,7 @@ export class ThemeManager {
   }
 
   update(props: ThemeProps & { forceTheme?: ThemeParsed } = {}, force = false, notify = true) {
-    const avoidUpdate = force && this.getKey(props) === this.getKey()
+    const avoidUpdate = force ? false : this.getKey(props) === this.getKey()
     this.props = props
     if (props.forceTheme) {
       this.theme = props.forceTheme
