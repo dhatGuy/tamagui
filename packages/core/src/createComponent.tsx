@@ -1,6 +1,5 @@
 import { useComposedRefs } from '@tamagui/compose-refs'
 import { isClient, isRSC, isServer, isWeb, useIsomorphicLayoutEffect } from '@tamagui/constants'
-/* eslint-disable react-hooks/rules-of-hooks */
 import {
   composeEventHandlers,
   stylePropsTransform,
@@ -44,7 +43,6 @@ import {
   SpaceDirection,
   SpaceTokens,
   SpacerProps,
-  SplitStyleState,
   StaticConfig,
   StaticConfigParsed,
   StylableComponent,
@@ -104,17 +102,6 @@ if (process.env.TAMAGUI_TARGET === 'native') {
   BaseText = native.Text || native.default.Text
   BaseView = native.View || native.default.View
 }
-
-// let t
-// if (process.env.ANALYZE) {
-//   const t = require('@tamagui/timer').timer()
-//   setTimeout(() => {
-//     const out = t.print()
-//     if (isClient) {
-//       alert(out)
-//     }
-//   }, 2000)
-// }
 
 export function createComponent<
   ComponentPropTypes extends Object = {},
@@ -218,7 +205,16 @@ export function createComponent<
     const noClassNames = shouldAvoidClasses || shouldForcePseudo
 
     const forceUpdate = useForceUpdate()
-    const theme = useTheme(props.theme, componentName, props, forceUpdate, !noClassNames)
+    const theme = useTheme({
+      name: props.theme,
+      componentName,
+      reset: props.reset,
+      forceUpdate,
+      disableTracking: !noClassNames,
+      inverse: props.themeInverse,
+      // disableThemeClass: noClassNames,
+      debug: props.debug,
+    })
 
     const shouldSetMounted = needsMount && state.unmounted
     const setMounted = shouldSetMounted

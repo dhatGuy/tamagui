@@ -2,7 +2,6 @@ import React, { forwardRef } from 'react'
 
 import { ThemeName } from '../types'
 import { Theme } from '../views/Theme'
-import { ThemeInverse } from '../views/ThemeInverse'
 
 export interface ThemeableProps {
   theme?: ThemeName | null
@@ -14,14 +13,16 @@ export function themeable<Component extends (props: any) => any>(
   opts?: { componentName?: string }
 ) {
   const withThemeComponent = forwardRef(function WithTheme(props: any, ref) {
-    const { themeInverse, theme, ...rest } = props
+    const { themeInverse, theme, componentName, ...rest } = props
     const element = React.createElement(component, { ...rest, ref } as any)
     return (
-      <ThemeInverse disable={!themeInverse}>
-        <Theme componentName={opts?.componentName} name={(theme as any) || null}>
-          {element}
-        </Theme>
-      </ThemeInverse>
+      <Theme
+        inverse={themeInverse}
+        componentName={componentName || opts?.componentName}
+        name={(theme as any) || null}
+      >
+        {element}
+      </Theme>
     )
   })
 

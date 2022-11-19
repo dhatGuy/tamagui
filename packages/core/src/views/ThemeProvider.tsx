@@ -6,9 +6,6 @@ import { THEME_CLASSNAME_PREFIX } from '../constants/constants'
 import { ThemeContext } from '../contexts/ThemeContext'
 import { Theme } from './Theme'
 
-// bugfix esbuild strips react jsx: 'preserve'
-React['createElement']
-
 export type ThemeProviderProps = {
   className?: string
   defaultTheme: string

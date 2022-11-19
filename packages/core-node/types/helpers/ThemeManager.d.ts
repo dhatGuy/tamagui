@@ -1,5 +1,5 @@
 /// <reference types="react" />
-import { ThemeParsed, Themes } from '../types';
+import { ThemeParsed, ThemeProps } from '../types';
 declare type ThemeListener = (name: string | null, themeManager: ThemeManager) => void;
 export declare type SetActiveThemeProps = {
     className?: string;
@@ -7,34 +7,29 @@ export declare type SetActiveThemeProps = {
     name?: string | null;
     theme?: any;
 };
-export declare type GetNextThemeProps = {
-    themes?: Themes;
-    name?: string | null;
-    componentName?: string | null;
-    reset?: boolean;
+declare type NextTheme = {
+    name: string;
+    theme?: ThemeParsed | null;
+    className?: string;
 };
 export declare class ThemeManager {
-    name: string;
-    className: string;
-    theme: ThemeParsed | null;
-    parentManager: ThemeManager | null;
+    parentManager?: ThemeManager | undefined;
     reset: boolean;
     keys: Map<any, Set<string>>;
     listeners: Map<any, Function>;
     themeListeners: Set<ThemeListener>;
-    constructor(name?: string, className?: string, theme?: ThemeParsed | null, parentManager?: ThemeManager | null, reset?: boolean);
-    get didChangeTheme(): boolean | null;
+    name: string;
+    className: string;
+    theme: ThemeParsed | null;
+    constructor(props?: Partial<NextTheme> | undefined, parentManager?: ThemeManager | undefined, reset?: boolean);
+    get didChangeTheme(): boolean | undefined;
     get parentName(): string | null;
     get fullName(): string;
     getValue(key: string): import("..").Variable<any> | undefined;
     isTracking(uuid: Object): boolean;
     update({ name, theme, className }?: SetActiveThemeProps, force?: boolean, notify?: boolean): boolean;
-    getNextTheme(props?: GetNextThemeProps, debug?: any): {
-        name: string;
-        theme: ThemeParsed | null;
-        className: string | undefined;
-    };
-    getCN(name: string): string;
+    getNextTheme(props?: ThemeProps, debug?: any): NextTheme;
+    getCN(name: string, disableRemoveScheme?: boolean): string;
     track(uuid: any, keys: Set<string>): void;
     notify(): void;
     onChangeTheme(cb: ThemeListener): () => void;

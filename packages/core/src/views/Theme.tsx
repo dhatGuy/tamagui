@@ -3,23 +3,17 @@ import React, { memo, useMemo } from 'react'
 
 import { variableToString } from '../createVariable'
 import { ThemeManager, ThemeManagerContext } from '../helpers/ThemeManager'
-import { ThemeProps, useChangeThemeEffect } from '../hooks/useTheme'
-
-// bugfix esbuild strips react jsx: 'preserve'
-React['createElement']
+import { useChangeThemeEffect } from '../hooks/useTheme'
+import { ThemeProps } from '../types'
 
 export const Theme = memo(function Theme(props: ThemeProps) {
-  const { name, theme, themeManager, themes, className } = useChangeThemeEffect(
-    props.name,
-    props.componentName,
-    props
-  )
+  const { name, theme, themeManager, themes, className } = useChangeThemeEffect(props)
 
   const missingTheme = !themes || !name || !theme
 
   // memo here, changing theme without re-rendering all children is a critical optimization
   // may require some effort of end user to memoize but without this memo they'd have no option
-  const contents = useMemo(
+  let contents = useMemo(
     () => (missingTheme ? null : wrapThemeManagerContext(props.children, themeManager)),
     [missingTheme, props.children, themeManager]
   )
@@ -33,14 +27,16 @@ export const Theme = memo(function Theme(props: ThemeProps) {
   }
 
   if (isWeb) {
-    return (
+    const classNameFinal = (
+      !props.disableThemeClass
+        ? [props.className, className, '_dsp_contents'].filter(Boolean)
+        : ['_dsp_contents']
+    ).join(' ')
+
+    contents = (
       <span
-        className={(!props.disableThemeClass
-          ? [props.className, className].filter(Boolean)
-          : []
-        ).join(' ')}
+        className={classNameFinal}
         style={{
-          display: 'contents',
           // in order to provide currentColor, set color by default
           color: variableToString(themes[name]?.color),
         }}
@@ -48,6 +44,16 @@ export const Theme = memo(function Theme(props: ThemeProps) {
         {contents}
       </span>
     )
+
+    // web relies on nesting .t_dark > .t_blue to avoid generating as many selectors
+    if (props.inverse) {
+      const isDark = name.startsWith('dark_')
+      contents = (
+        <div className={`t_themeinverse _dsp_contents ${isDark ? 't_light' : 't_dark'}`}>
+          {contents}
+        </div>
+      )
+    }
   }
 
   return contents

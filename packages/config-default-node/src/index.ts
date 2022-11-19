@@ -117,6 +117,14 @@ export function getDefaultTamaguiConfig() {
       background: tokens.color.black,
       color: tokens.color.white,
     },
+    dark_red: {
+      background: 'darkred',
+      color: 'white',
+    },
+    dark_red_Button: {
+      background: 'darkred',
+      color: '#ccc',
+    },
   }
 
   return createTamagui({

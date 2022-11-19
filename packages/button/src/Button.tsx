@@ -15,10 +15,7 @@ import { getButtonSized } from '@tamagui/get-button-sized'
 import { useGetThemedIcon } from '@tamagui/helpers-tamagui'
 import { ThemeableStack } from '@tamagui/stacks'
 import { SizableText, TextParentStyles, wrapChildrenInText } from '@tamagui/text'
-import React, { FunctionComponent, forwardRef, useContext } from 'react'
-
-// bugfix esbuild strips react jsx: 'preserve'
-React['createElement']
+import { FunctionComponent, forwardRef, useContext } from 'react'
 
 type ButtonIconProps = { color?: string; size?: number }
 type IconProp = JSX.Element | FunctionComponent<ButtonIconProps> | null
