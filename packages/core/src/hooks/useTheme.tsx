@@ -297,12 +297,13 @@ export const useChangeThemeEffect = (
   }
 
   if (props.debug) {
-    console.log('useChangeThemeEffect', props, {
-      ...themeManager.state,
+    console.log(
+      'useChangeThemeEffect',
+      props,
       didChange,
-      themes,
-      themeManager,
-    })
+      themeManager.state.name,
+      themeManager.state.className
+    )
   }
 
   return {
