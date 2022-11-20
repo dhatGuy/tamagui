@@ -15,16 +15,14 @@ declare type ThemeManagerState = {
 };
 export declare class ThemeManager {
     #private;
-    ogParentManager?: ThemeManager | "root" | null | undefined;
     props?: ThemeProps | undefined;
-    debug?: any;
     keys: Map<any, Set<string>>;
     listeners: Map<any, Function>;
     themeListeners: Set<ThemeListener>;
     originalParentManager: ThemeManager | null;
     parentManager: ThemeManager | null;
     state: ThemeManagerState;
-    constructor(ogParentManager?: ThemeManager | "root" | null | undefined, props?: ThemeProps | undefined, debug?: any);
+    constructor(ogParentManager?: ThemeManager | 'root' | null | undefined, props?: ThemeProps | undefined);
     updateState(props?: ThemeProps & {
         forceTheme?: ThemeParsed;
     }, forceUpdate?: boolean, notify?: boolean): boolean;

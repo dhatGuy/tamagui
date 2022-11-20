@@ -2,7 +2,7 @@ import { isWeb } from '@tamagui/constants'
 import { createContext } from 'react'
 
 import { getThemes } from '../config'
-import { THEME_CLASSNAME_PREFIX } from '../constants/constants'
+import { THEME_CLASSNAME_PREFIX, THEME_NAME_SEPARATOR } from '../constants/constants'
 import { getThemeUnwrapped } from '../hooks/getThemeUnwrapped'
 import { ThemeParsed, ThemeProps } from '../types'
 import { inverseTheme } from '../views/ThemeInverse'
@@ -34,9 +34,8 @@ export class ThemeManager {
   state: ThemeManagerState = emptyState
 
   constructor(
-    public ogParentManager?: ThemeManager | 'root' | null | undefined,
-    public props?: ThemeProps,
-    public debug?: any
+    ogParentManager?: ThemeManager | 'root' | null | undefined,
+    public props?: ThemeProps
   ) {
     if (ogParentManager && ogParentManager !== 'root') {
       this.originalParentManager = ogParentManager
@@ -47,21 +46,8 @@ export class ThemeManager {
     }
     this.parentManager = ogParentManager || null
     const didUpdate = this.updateState(props, false, false)
-
-    // if (didUpdate)
-    //   console.log(
-    //     'didUpdate',
-    //     !!ogParentManager,
-    //     this.parentManager,
-    //     this.parentManager?.state.name,
-    //     props?.name,
-    //     props?.componentName
-    //   )
-
     if (!didUpdate && ogParentManager) {
       return ogParentManager
-    } else {
-      console.log('new one')
     }
   }
 
@@ -80,7 +66,6 @@ export class ThemeManager {
         shouldTryUpdate = true
       }
     }
-
     if (props.forceTheme) {
       this.state.theme = props.forceTheme
       this.state.name = props.name || ''
@@ -121,9 +106,8 @@ export class ThemeManager {
       return ``
     }
     if (this.#key) return this.#key
-    const key = `${props.name || 0}${props.inverse || 0}${props.reset || 0}${
-      props.componentName || 0
-    }`
+    const { name, inverse, reset, componentName } = props
+    const key = `${name || 0}${inverse || 0}${reset || 0}${componentName || 0}`
     this.#key ??= key
     return key
   }
@@ -209,29 +193,45 @@ function getNextThemeState(
     }
   }
 
-  const parentName = parentManager?.state.name
+  const parentName = parentManager?.state.name || ''
   let nextName = parentManager?.props?.reset ? parentName || '' : props.name || ''
-  if (props.inverse && !isWeb) {
-    nextName = inverseTheme(nextName)
-  }
 
-  const potentialChild = `${parentName}_${nextName}`
+  const parentParts = parentName.split(THEME_NAME_SEPARATOR)
+  const prefixes = parentParts
+    .map((_, i) => {
+      return parentParts.slice(0, i + 1).join(THEME_NAME_SEPARATOR)
+    })
+    // most specific first
+    .reverse()
+
   const potentialComponent = props.componentName
-    ? `${withoutComponentName(nextName)}_${props.componentName}`
+    ? nextName
+      ? `${withoutComponentName(nextName)}_${props.componentName}`
+      : props.componentName
     : null
 
-  // sort by most specific to least so we can bail early once we match one
-  let potentials = [
-    ...(potentialComponent ? [`${parentName}_${potentialComponent}`, potentialComponent] : []),
-    potentialChild,
-    nextName,
-  ]
-  if (props.inverse && !isWeb) {
+  // order important (most specific to least)
+  const newPotentials = prefixes.flatMap((prefix) => {
+    const res: string[] = []
+    if (potentialComponent && nextName) {
+      res.push([prefix, nextName, potentialComponent].join(THEME_NAME_SEPARATOR))
+    }
+    if (nextName) {
+      res.push([prefix, nextName].join(THEME_NAME_SEPARATOR))
+    }
+    if (potentialComponent) {
+      res.push([prefix, potentialComponent].join(THEME_NAME_SEPARATOR))
+    }
+    return res
+  })
+
+  let potentials = [...newPotentials, nextName]
+  if (props.inverse) {
     potentials = potentials.map(inverseTheme)
   }
 
   for (const name of potentials) {
-    if (name in themes) {
+    if (name && name in themes) {
       nextName = name
       break
     }

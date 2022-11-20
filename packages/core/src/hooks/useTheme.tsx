@@ -46,7 +46,12 @@ export const useTheme = (props: UseThemeProps = { name: null }): ThemeParsed => 
     state.current.uuid
   )
 
-  if (didChange) console.log('className', className, name, props)
+  if (process.env.NODE_ENV === 'development') {
+    // ensure we aren't creating too many ThemeManagers
+    if (didChange && className === themeManager?.parentManager?.state.className) {
+      console.error(`Should always change, duplicating ThemeMananger bug`, themeManager)
+    }
+  }
 
   if (process.env.NODE_ENV === 'development') {
     if (props?.debug === 'verbose') {
@@ -208,7 +213,6 @@ export const useChangeThemeEffect = (
   className?: string
 } => {
   const config = getConfig()
-
   if (process.env.NODE_ENV === 'development') {
     if (!config) {
       throw new Error(
@@ -241,9 +245,9 @@ export const useChangeThemeEffect = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // not concurrent safe but fixes native (but breaks SSR and not needed on web (i think) so leave only on native)
   const didChange = Boolean(themeManager !== parentManager)
-  if (didChange) console.log('didChange', didChange, themeManager, parentManager)
+
+  // not concurrent safe but fixes native (but breaks SSR and not needed on web (i think) so leave only on native)
   if (process.env.TAMAGUI_TARGET === 'native') {
     if (didChange) {
       console.warn('may not need anymore')
@@ -253,6 +257,8 @@ export const useChangeThemeEffect = (
 
   if (!isServer) {
     useLayoutEffect(() => {
+      if (!didChange) return
+
       themeManager.updateState(props, didChange)
       activeThemeManagers.add(themeManager)
 
