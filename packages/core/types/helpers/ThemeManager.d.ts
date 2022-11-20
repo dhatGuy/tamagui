@@ -25,18 +25,16 @@ export declare class ThemeManager {
     parentManager: ThemeManager | null;
     state: ThemeManagerState;
     constructor(ogParentManager?: ThemeManager | "root" | null | undefined, props?: ThemeProps | undefined, debug?: any);
+    updateState(props?: ThemeProps & {
+        forceTheme?: ThemeParsed;
+    }, forceUpdate?: boolean, notify?: boolean): boolean;
+    getState(props?: ThemeProps | undefined): ThemeManagerState | null;
+    getKey(props?: ThemeProps | undefined): string;
     get allKeys(): Set<string>;
     get parentName(): string | null;
     get fullName(): string;
     getValue(key: string): import("..").Variable<any> | undefined;
     isTracking(uuid: Object): boolean;
-    update(props?: ThemeProps & {
-        forceTheme?: ThemeParsed;
-    }, force?: boolean, notify?: boolean): boolean;
-    findNearestDifferingParentManager(): void;
-    getKey(props?: ThemeProps | undefined): string;
-    getState(props?: ThemeProps | undefined): ThemeManagerState | null;
-    getCN(name: string, disableRemoveScheme?: boolean): string;
     track(uuid: any, keys: Set<string>): void;
     notify(): void;
     onChangeTheme(cb: ThemeListener): () => void;

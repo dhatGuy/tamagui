@@ -226,6 +226,8 @@ export function createComponent<
       // disableThemeClass: noClassNames,
       debug: props.debug,
     })
+    const themeManager = getThemeManager(theme)
+    const themeDidChange = getThemeDidChange(theme)
 
     const shouldSetMounted = needsMount && state.unmounted
     const setMounted = shouldSetMounted
@@ -629,10 +631,11 @@ export function createComponent<
     }
     const fontFamilyClassName = fontFamily ? `font_${fontFamily}` : ''
 
+    if (themeDidChange) console.log('theme.className', theme.className)
     const classList = [
       componentName ? componentClassName : '',
       fontFamilyClassName,
-      theme.className,
+      themeDidChange ? theme.className : '',
       classNames ? Object.values(classNames).join(' ') : '',
     ]
     const className = classList.join(' ')
@@ -818,8 +821,6 @@ export function createComponent<
       }
     }
 
-    const themeManager = getThemeManager(theme)
-    const themeDidChange = getThemeDidChange(theme)
     const themeShouldReset = Boolean(themeShallow && themeManager && themeDidChange)
 
     const shouldProvideThemeManager = themeShouldReset || (themeManager && themeDidChange)

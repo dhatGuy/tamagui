@@ -41,16 +41,91 @@ export class ThemeManager {
     if (ogParentManager && ogParentManager !== 'root') {
       this.originalParentManager = ogParentManager
     }
-    const didUpdate = this.update(props, true, false)
     if (ogParentManager === 'root') {
+      this.updateState(props, false, false)
       return
     }
     this.parentManager = ogParentManager || null
-    if (!didUpdate) {
-      if (ogParentManager) {
-        return ogParentManager
+    const didUpdate = this.updateState(props, false, false)
+
+    // if (didUpdate)
+    //   console.log(
+    //     'didUpdate',
+    //     !!ogParentManager,
+    //     this.parentManager,
+    //     this.parentManager?.state.name,
+    //     props?.name,
+    //     props?.componentName
+    //   )
+
+    if (!didUpdate && ogParentManager) {
+      return ogParentManager
+    } else {
+      console.log('new one')
+    }
+  }
+
+  updateState(
+    props: ThemeProps & { forceTheme?: ThemeParsed } = this.props || {},
+    forceUpdate = false,
+    notify = true
+  ) {
+    let shouldTryUpdate = forceUpdate || !this.parentManager
+    if (!shouldTryUpdate) {
+      const nextKey = this.getKey(props)
+      if (
+        (this.parentManager && nextKey !== this.parentManager.getKey()) ||
+        this.getKey() !== nextKey
+      ) {
+        shouldTryUpdate = true
       }
     }
+
+    if (props.forceTheme) {
+      this.state.theme = props.forceTheme
+      this.state.name = props.name || ''
+      notify && this.notify()
+      return true
+    }
+    if (shouldTryUpdate) {
+      const nextState = this.getState(props)
+      if (nextState) {
+        this.state = nextState
+        notify && this.notify()
+        return true
+      }
+    }
+    return false
+  }
+
+  getState(props: ThemeProps | undefined = this.props): ThemeManagerState | null {
+    if (!props) {
+      return null
+    }
+    const next = getNextThemeState(props, this.parentManager)
+    if (!next || !next.theme) {
+      return null
+    }
+    if (this.parentManager && next && next.theme === this.parentManager.state.theme) {
+      return null
+    }
+    return next
+  }
+
+  #key: string | null = null
+  getKey(props: ThemeProps | undefined = this.props) {
+    if (!props) {
+      if (process.env.NODE_ENV === 'development') {
+        throw new Error(`No props given to ThemeManager.getKey()`)
+      }
+      return ``
+    }
+    if (this.#key) return this.#key
+    const key = `${props.name || 0}${props.inverse || 0}${props.reset || 0}${
+      props.componentName || 0
+    }`
+    this.#key ??= key
+    return key
   }
 
   #allKeys: Set<string> | null = null
@@ -89,100 +164,21 @@ export class ThemeManager {
     return Boolean(this.keys.get(uuid)?.size)
   }
 
-  update(props: ThemeProps & { forceTheme?: ThemeParsed } = {}, force = false, notify = true) {
-    const shouldUpdate =
-      !this.parentManager || (force ? false : this.getKey(props) === this.getKey())
-    this.props = props
-    if (props.forceTheme) {
-      this.state.theme = props.forceTheme
-      this.state.name = props.name || ''
-      notify && this.notify()
-      return true
-    }
-    if (shouldUpdate) {
-      this.findNearestDifferingParentManager()
-      const nextState = this.getState(props)
-      if (nextState) {
-        this.state = nextState
-        notify && this.notify()
-        return true
-      }
-    }
-    return false
-  }
-
-  findNearestDifferingParentManager() {
-    if (!this.originalParentManager || !this.props) return
-    // find the nearest different parentManager
-    const parent = this.originalParentManager
-    const tries = 0
-    // while (true) {
-    //   if (++tries > 10) {
-    //     throw new Error(`Nested 10 theme changes in a row`)
-    //   }
-    //   if (!parent || !parent.state.name) break
-    //   if (parent.state.name === this.state.name) {
-    //     if (parent.parentManager) {
-    //       // go up if same
-    //       parent = parent.parentManager
-    //     }
-    //   } else {
-    //     this.parentManager = parent
-    //     break
-    //   }
-    // }
-  }
-
-  #key: string | null = null
-
-  getKey(props: ThemeProps | undefined = this.props) {
-    if (!props) {
-      if (process.env.NODE_ENV === 'development') {
-        throw new Error(`No props given to ThemeManager.getKey()`)
-      }
-      return ``
-    }
-    if (this.#key) return this.#key
-    const key = `${props.name || 0}${props.inverse || 0}${props.reset || 0}${
-      props.componentName || 0
-    }`
-    this.#key ??= key
-    return key
-  }
-
-  getState(props: ThemeProps | undefined = this.props): ThemeManagerState | null {
-    if (!props) {
-      return null
-    }
-    const next = getNextThemeState(props, this.parentManager)
-    if (!next || !next.theme) {
-      return null
-    }
-    if (this.parentManager && next && next.theme === this.parentManager.state.theme) {
-      return null
-    }
-    return next
-  }
-
-  getCN(name: string, disableRemoveScheme = false) {
-    return getNextThemeClassName(name, disableRemoveScheme)
-  }
-
   track(uuid: any, keys: Set<string>) {
     if (!this.state.name) return
     this.keys.set(uuid, keys)
   }
 
   notify() {
-    if (!this.state.name) {
-      this.keys.clear()
-    }
-    for (const [uuid, keys] of this.keys.entries()) {
-      if (keys.size) {
-        this.listeners.get(uuid)?.()
-      }
-    }
-    this.themeListeners.forEach((cb) => cb(this.state.name, this))
+    if (!this.themeListeners.size || !this.keys.size) return
+    // for (const [uuid, keys] of this.keys.entries()) {
+    //   if (keys.size) {
+    //     this.listeners.get(uuid)?.()
+    //   }
+    // }
+    // debugger
+    console.warn('notify')
+    // this.themeListeners.forEach((cb) => cb(this.state.name, this))
   }
 
   onChangeTheme(cb: ThemeListener) {

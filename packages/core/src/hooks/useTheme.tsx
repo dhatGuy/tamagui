@@ -46,6 +46,8 @@ export const useTheme = (props: UseThemeProps = { name: null }): ThemeParsed => 
     state.current.uuid
   )
 
+  if (didChange) console.log('className', className, name, props)
+
   if (process.env.NODE_ENV === 'development') {
     if (props?.debug === 'verbose') {
       // eslint-disable-next-line no-console
@@ -240,25 +242,24 @@ export const useChangeThemeEffect = (
   }, [])
 
   // not concurrent safe but fixes native (but breaks SSR and not needed on web (i think) so leave only on native)
-  const didChange = Boolean(
-    themeManager.parentManager && themeManager !== themeManager.parentManager
-  )
-  console.log('didChange', didChange)
+  const didChange = Boolean(themeManager !== parentManager)
+  if (didChange) console.log('didChange', didChange, themeManager, parentManager)
   if (process.env.TAMAGUI_TARGET === 'native') {
     if (didChange) {
-      themeManager.update(props, false, false)
+      console.warn('may not need anymore')
+      themeManager.updateState(props, false, false)
     }
   }
 
   if (!isServer) {
     useLayoutEffect(() => {
-      themeManager.update(props, didChange)
+      themeManager.updateState(props, didChange)
       activeThemeManagers.add(themeManager)
 
       if (!parentManager) return
 
       const disposeParentOnChange = parentManager.onChangeTheme(() => {
-        if (themeManager.update(props)) {
+        if (themeManager.updateState(props)) {
           if (uuid && !themeManager.isTracking(uuid)) {
             // no need to re-render if not tracking any keys
             return
@@ -290,16 +291,8 @@ export const useChangeThemeEffect = (
   }
 
   return {
-    didChange,
-    ...(parentManager && {
-      name: parentManager.state.name,
-      theme: parentManager.state.theme,
-    }),
     ...themeManager.state,
-    className:
-      themeManager.state.className === parentManager?.state.className
-        ? undefined
-        : themeManager.state.className,
+    didChange,
     themes,
     themeManager,
   }
