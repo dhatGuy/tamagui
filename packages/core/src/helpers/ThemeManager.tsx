@@ -27,7 +27,6 @@ const emptyState: ThemeManagerState = { name: '-' }
 
 export class ThemeManager {
   keys = new Map<any, Set<string>>()
-  listeners = new Map<any, Function>()
   themeListeners = new Set<ThemeListener>()
   originalParentManager: ThemeManager | null = null
   parentManager: ThemeManager | null = null
@@ -154,15 +153,7 @@ export class ThemeManager {
   }
 
   notify() {
-    if (!this.themeListeners.size || !this.keys.size) return
-    // for (const [uuid, keys] of this.keys.entries()) {
-    //   if (keys.size) {
-    //     this.listeners.get(uuid)?.()
-    //   }
-    // }
-    // debugger
-    console.warn('notify')
-    // this.themeListeners.forEach((cb) => cb(this.state.name, this))
+    this.themeListeners.forEach((cb) => cb(this.state.name, this))
   }
 
   onChangeTheme(cb: ThemeListener) {

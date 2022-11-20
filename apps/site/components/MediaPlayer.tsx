@@ -30,7 +30,7 @@ export const MediaPlayer = memo(
     pointerEventsControls?: any
   }) => {
     return (
-      <Theme debug name={!alt ? null : (`alt${alt}` as ThemeName)}>
+      <Theme name={!alt ? null : (`alt${alt}` as ThemeName)}>
         <Card
           overflow="visible"
           bordered

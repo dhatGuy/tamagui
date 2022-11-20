@@ -302,6 +302,7 @@ export const useChangeThemeEffect = (
       // prettier-ignore
       // eslint-disable-next-line no-console
       console.log('useChangeThemeEffect', props.name, props.componentName, didChange, themeManager.state.name, themeManager.state.className, themeManager.parentManager?.state.className)
+      debugger
     }
   }
 

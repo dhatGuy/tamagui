@@ -17,7 +17,6 @@ export declare class ThemeManager {
     #private;
     props?: ThemeProps | undefined;
     keys: Map<any, Set<string>>;
-    listeners: Map<any, Function>;
     themeListeners: Set<ThemeListener>;
     originalParentManager: ThemeManager | null;
     parentManager: ThemeManager | null;
