@@ -1,5 +1,5 @@
 import { isWeb } from '@tamagui/constants'
-import { memo, useContext, useMemo } from 'react'
+import { memo, useMemo } from 'react'
 
 import { variableToString } from '../createVariable'
 import { ThemeManager, ThemeManagerContext } from '../helpers/ThemeManager'
@@ -11,30 +11,33 @@ export function wrapThemeManagerContext(
   themeManager?: ThemeManager | null,
   shouldReset?: boolean
 ) {
+  // be sure to memoize themeManager to avoid reparenting
+  if (!themeManager) {
+    return children
+  }
   // be sure to memoize shouldReset to avoid reparenting
   let next = children
   // reset to parent theme
   if (shouldReset && themeManager) {
     next = <Theme name={themeManager.parentName}>{next}</Theme>
   }
-  // be sure to memoize themeManager to avoid reparenting
-  if (!themeManager) {
-    return next
-  }
   return <ThemeManagerContext.Provider value={themeManager}>{next}</ThemeManagerContext.Provider>
 }
 
 export const Theme = memo(function Theme(props: ThemeProps) {
-  const { name, theme, themeManager, themes, className } = useChangeThemeEffect(props)
-
+  const { name, theme, themeManager, themes, className, didChange } = useChangeThemeEffect(props)
   const missingTheme = !themes || !name || !theme
 
   // memo here, changing theme without re-rendering all children is a critical optimization
   // may require some effort of end user to memoize but without this memo they'd have no option
-  let contents = useMemo(
-    () => (missingTheme ? null : wrapThemeManagerContext(props.children, themeManager)),
-    [missingTheme, props.children, themeManager]
-  )
+  let didCalc = false
+  let contents = useMemo(() => {
+    didCalc = true
+    return missingTheme ? null : wrapThemeManagerContext(props.children, themeManager)
+  }, [missingTheme, props.children, themeManager])
+  if (!didCalc) {
+    console.warn('optimize worth it')
+  }
 
   if (missingTheme) {
     if (process.env.NODE_ENV === 'development') {
@@ -47,11 +50,10 @@ export const Theme = memo(function Theme(props: ThemeProps) {
   }
 
   if (isWeb) {
-    const classNameFinal = (
-      !props.disableThemeClass
-        ? [props.className, className, '_dsp_contents'].filter(Boolean)
-        : ['_dsp_contents']
-    ).join(' ')
+    const classNameFinal =
+      props.disableThemeClass || !didChange
+        ? '_dsp_contents'
+        : [props.className, className, '_dsp_contents'].filter(Boolean).join(' ')
 
     contents = (
       <span
@@ -67,12 +69,13 @@ export const Theme = memo(function Theme(props: ThemeProps) {
 
     // web relies on nesting .t_dark > .t_blue to avoid generating as many selectors
     if (props.inverse) {
-      const isDark = name.startsWith('dark_')
-      contents = (
-        <div className={`t_themeinverse _dsp_contents ${isDark ? 't_light' : 't_dark'}`}>
-          {contents}
-        </div>
-      )
+      console.warn('inverse should be handled not in useChangeThemeEffect')
+      // const isDark = name.startsWith('dark_')
+      // contents = (
+      //   <div className={`t_themeinverse _dsp_contents ${isDark ? 't_light' : 't_dark'}`}>
+      //     {contents}
+      //   </div>
+      // )
     }
   }
 

@@ -631,19 +631,6 @@ export function createComponent<
     }
     const fontFamilyClassName = fontFamily ? `font_${fontFamily}` : ''
 
-    if (debugProp) {
-      console.log('theme.className', theme.className, themeManager, {
-        name: props.theme,
-        componentName,
-        reset: props.reset,
-        forceUpdate,
-        disableTracking: !noClassNames,
-        inverse: props.themeInverse,
-        // disableThemeClass: noClassNames,
-        debug: props.debug,
-      })
-    }
-
     const classList = [
       componentName ? componentClassName : '',
       fontFamilyClassName,
