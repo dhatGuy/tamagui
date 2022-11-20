@@ -28,19 +28,19 @@ describe('ThemeManager', () => {
     expect(child.state.name).toBe('dark_red')
   })
 
-  test.only('Given parent theme "dark", child theme "blue_alt2" and component "Button" returns "dark_blue_alt2_Button"', () => {
+  test('Given parent theme "dark", child theme "red_alt2" and component "Button" returns "dark_red_alt2_Button"', () => {
     const parent = new ThemeManager(undefined, {
       name: 'dark',
     })
     const child1 = new ThemeManager(parent, {
-      name: 'blue',
+      name: 'red',
     })
-    expect(child1.state.name).toBe('dark_blue')
+    expect(child1.state.name).toBe('dark_red')
     const child2 = new ThemeManager(child1, {
       name: 'alt2',
       componentName: 'Button',
     })
-    expect(child2.state.name).toBe('dark_blue_alt2_Button')
+    expect(child2.state.name).toBe('dark_red_alt2_Button')
   })
 
   test('Inverts "light" to "dark"', () => {
@@ -52,5 +52,16 @@ describe('ThemeManager', () => {
     })
     expect(parent.state.name).toBe('light')
     expect(child.state.name).toBe('dark')
+  })
+
+  test('Inverts "light_red" to "dark_red"', () => {
+    const parent = new ThemeManager(undefined, {
+      name: 'light',
+    })
+    const child1 = new ThemeManager(parent, {
+      name: 'red',
+      inverse: true,
+    })
+    expect(child1.state.name).toBe('dark_red')
   })
 })

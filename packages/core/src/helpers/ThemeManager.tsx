@@ -35,7 +35,7 @@ export class ThemeManager {
 
   constructor(public originalParentManager?: ThemeManager | undefined, public props?: ThemeProps) {
     this.parentManager = originalParentManager || null
-    this.update(props)
+    this.update(props, true, false)
   }
 
   get didChangeTheme() {
@@ -120,7 +120,7 @@ export class ThemeManager {
       }
       return ``
     }
-    return `${props.name}${props.inverse}${props.reset}${props.componentName}`
+    return `${props.name || 0}${props.inverse || 0}${props.reset || 0}${props.componentName || 0}`
   }
 
   getState(props: ThemeProps | undefined = this.props): ThemeManagerState | null {
@@ -177,50 +177,31 @@ export class ThemeManager {
       nextName = inverseTheme(nextName)
     }
 
-    if (this.parentName) {
-      const subName = `${this.parentName}_${nextName}`
-      if (subName in themes) {
-        nextName = subName
+    const potentialChild = `${this.parentName}_${nextName}`
+    const potentialComponent = componentName
+      ? `${withoutComponentName(nextName)}_${componentName}`
+      : null
+
+    // sort by most specific to least so we can bail early once we match one
+    let potentials = [
+      ...(potentialComponent
+        ? [`${this.parentName}_${potentialComponent}`, potentialComponent]
+        : []),
+      potentialChild,
+      nextName,
+    ]
+    if (props.inverse && !isWeb) {
+      potentials = potentials.map(inverseTheme)
+    }
+
+    for (const name of potentials) {
+      if (name in themes) {
+        nextName = name
+        break
       }
     }
 
-    // let parentName = this.parentName || this.fullName
-    // console.log('starts with', { parentName, nextName })
-    // if (!parentIsReset) {
-    //   while (true) {
-    //     // if (nextName in themes) break
-    //     nextName = `${parentName}_${name}`
-    //     if (nextName in themes) break
-    //     // this is fine - some themes can not have parents
-    //     if (!parentName.includes(THEME_NAME_SEPARATOR)) break
-    //     // go up one
-    //     parentName = parentName.slice(0, parentName.lastIndexOf(THEME_NAME_SEPARATOR))
-    //   }
-    // }
-
-    if (componentName) {
-      // allow for _Card_Button or just _Button
-      let names = [
-        `${nextName}_${componentName}`,
-        `${withoutComponentName(nextName)}_${componentName}`,
-      ]
-      if (props.inverse && !isWeb) {
-        names = names.map((name) => inverseTheme(name))
-      }
-      // console.log('getin', names)
-      for (const name of names) {
-        if (name in themes) {
-          nextName = name
-        }
-      }
-    }
-
-    // console.log('gots', { nextName, parent: this.parentManager?.name })
-
-    let theme = themes[nextName]
-    if (!theme) {
-      theme = themes[`light_${nextName}`]
-    }
+    const theme = themes[nextName]
 
     return {
       name: nextName,

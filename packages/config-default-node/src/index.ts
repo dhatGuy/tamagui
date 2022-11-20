@@ -125,6 +125,10 @@ export function getDefaultTamaguiConfig() {
       background: 'darkred',
       color: '#ccc',
     },
+    dark_red_alt2_Button: {
+      background: 'darkred',
+      color: '#444',
+    },
   }
 
   return createTamagui({
