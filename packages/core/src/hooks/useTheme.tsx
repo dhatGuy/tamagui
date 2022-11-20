@@ -296,14 +296,12 @@ export const useChangeThemeEffect = (
     ])
   }
 
-  if (props.debug) {
-    console.log(
-      'useChangeThemeEffect',
-      props,
-      didChange,
-      themeManager.state.name,
-      themeManager.state.className
-    )
+  if (process.env.NODE_ENV === 'development') {
+    if (props.debug) {
+      // prettier-ignore
+      // eslint-disable-next-line no-console
+      console.log('useChangeThemeEffect', props.name, props.componentName, didChange, themeManager.state.name, themeManager.state.className)
+    }
   }
 
   return {
