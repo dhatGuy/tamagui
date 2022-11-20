@@ -14,16 +14,19 @@ declare type ThemeManagerState = {
     className?: string;
 };
 export declare class ThemeManager {
-    originalParentManager?: ThemeManager | undefined;
+    #private;
+    ogParentManager?: ThemeManager | "root" | null | undefined;
     props?: ThemeProps | undefined;
+    debug?: any;
     keys: Map<any, Set<string>>;
     listeners: Map<any, Function>;
     themeListeners: Set<ThemeListener>;
-    theme: ThemeParsed | null;
+    originalParentManager: ThemeManager | null;
     parentManager: ThemeManager | null;
     state: ThemeManagerState;
-    constructor(originalParentManager?: ThemeManager | undefined, props?: ThemeProps | undefined);
-    get didChangeTheme(): boolean | undefined;
+    constructor(ogParentManager?: ThemeManager | "root" | null | undefined, props?: ThemeProps | undefined, debug?: any);
+    get allKeys(): Set<string>;
+    get didChangeTheme(): boolean | null;
     get parentName(): string | null;
     get fullName(): string;
     getValue(key: string): import("..").Variable<any> | undefined;

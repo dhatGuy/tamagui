@@ -161,14 +161,23 @@ export function createComponent<
     const setStateShallow = useShallowSetState(setState, debugProp, componentName)
 
     const useAnimations = tamaguiConfig.animations?.useAnimations as UseAnimationHook | undefined
+
     // conditional but if ever true stays true
-    const hasEverAnimated = useRef(false)
+    // [animated, inversed]
+    const stateRef = useRef(
+      undefined as any as {
+        hasAnimated?: boolean
+        hasThemeInversed?: boolean
+      }
+    )
+    stateRef.current ??= {}
+
     const isAnimated = (() => {
       const next = !!(useAnimations && props.animation)
-      if (next && !hasEverAnimated.current) {
-        hasEverAnimated.current = true
+      if (next && !stateRef.current.hasAnimated) {
+        stateRef.current.hasAnimated = true
       }
-      return next || hasEverAnimated.current
+      return next || stateRef.current.hasAnimated
     })()
     const isReactNative = Boolean(
       staticConfig.isReactNative || (isAnimated && tamaguiConfig.animations.isReactNative)
@@ -808,13 +817,12 @@ export function createComponent<
     }
 
     const themeManager = getThemeManager(theme)
-
     const shouldSetChildrenThemeToParent = Boolean(
       themeShallow && themeManager && themeManager.didChangeTheme
     )
 
     const shouldProvideThemeManager =
-      shouldSetChildrenThemeToParent || (themeManager && themeManager.didChangeTheme)
+      shouldSetChildrenThemeToParent || (themeManager && !themeManager.didChangeTheme)
 
     const childEls =
       !children || asChild

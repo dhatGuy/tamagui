@@ -6,6 +6,25 @@ import { ThemeManager, ThemeManagerContext } from '../helpers/ThemeManager'
 import { useChangeThemeEffect } from '../hooks/useTheme'
 import { ThemeProps } from '../types'
 
+export function wrapThemeManagerContext(
+  children: any,
+  themeManager?: ThemeManager | null,
+  shouldReset?: boolean
+) {
+  // be sure to memoize shouldReset to avoid reparenting
+  const next =
+    shouldReset && themeManager ? (
+      <Theme name={themeManager.parentName}>{children}</Theme>
+    ) : (
+      children
+    )
+  // be sure to memoize themeManager to avoid reparenting
+  if (!themeManager) {
+    return next
+  }
+  return <ThemeManagerContext.Provider value={themeManager}>{next}</ThemeManagerContext.Provider>
+}
+
 export const Theme = memo(function Theme(props: ThemeProps) {
   const { name, theme, themeManager, themes, className } = useChangeThemeEffect(props)
 
@@ -60,22 +79,3 @@ export const Theme = memo(function Theme(props: ThemeProps) {
 
   return contents
 })
-
-export function wrapThemeManagerContext(
-  children: any,
-  themeManager?: ThemeManager | null,
-  shouldSetChildrenThemeToParent?: boolean
-) {
-  if (!themeManager) {
-    return children
-  }
-  return (
-    <ThemeManagerContext.Provider value={themeManager}>
-      {shouldSetChildrenThemeToParent ? (
-        <Theme name={themeManager.parentName}>{children}</Theme>
-      ) : (
-        children
-      )}
-    </ThemeManagerContext.Provider>
-  )
-}

@@ -1,6 +1,6 @@
-import { isRSC, isServer, isWeb, useIsomorphicLayoutEffect } from '@tamagui/constants'
+import { isRSC, isServer, useIsomorphicLayoutEffect } from '@tamagui/constants'
 import { useForceUpdate } from '@tamagui/use-force-update'
-import React, { useContext, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import React, { useContext, useLayoutEffect, useMemo, useState } from 'react'
 
 import { getConfig } from '../config'
 import { isDevTools } from '../constants/isDevTools'
@@ -25,8 +25,11 @@ export const useTheme = (props: UseThemeProps = { name: null }): ThemeParsed => 
   // TODO this can use useChangeThemeEffect almost ready
   if (isRSC) {
     const config = getConfig()
-    // @ts-ignore
-    return getThemeProxied(config.themes[config.defaultTheme], config.defaultTheme)
+    const name = Object.keys(config.themes)[0]
+    return getThemeProxied({
+      theme: config.themes[name],
+      name,
+    })
   }
 
   const state = useServerRef() as React.MutableRefObject<UseThemeState>
@@ -73,7 +76,7 @@ export const useTheme = (props: UseThemeProps = { name: null }): ThemeParsed => 
   if (!theme) {
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
-      console.warn('No theme found', name, props)
+      console.warn('No theme found', name, props, themeManager)
     }
     return themes[Object.keys(themes)[0]]
   }
@@ -118,8 +121,13 @@ function getThemeProxied({
 }) {
   return createProxy(theme, {
     has(_, key) {
-      if (typeof key === 'string' && key[0] === '$') {
-        key = key.slice(1)
+      if (typeof key === 'string') {
+        if (key[0] === '$') {
+          key = key.slice(1)
+        }
+        if (themeManager) {
+          return themeManager.allKeys.has(key)
+        }
       }
       return Reflect.has(theme, key)
     },
@@ -180,7 +188,6 @@ export function useThemeName(opts?: { parent?: true }): ThemeName {
 }
 
 export const activeThemeManagers = new Set<ThemeManager>()
-let defaultManager: ThemeManager | null = null
 
 export const useChangeThemeEffect = (
   props: UseThemeProps,
@@ -215,11 +222,7 @@ export const useChangeThemeEffect = (
     }
   }
 
-  let parentManager = useContext(ThemeManagerContext) as ThemeManager
-  if (!parentManager) {
-    defaultManager ||= new ThemeManager()
-    parentManager = defaultManager
-  }
+  const parentManager = useContext(ThemeManagerContext)
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const forceUpdate = forceUpdateProp || useForceUpdate()
@@ -245,6 +248,8 @@ export const useChangeThemeEffect = (
       themeManager.update(props, didChange)
       activeThemeManagers.add(themeManager)
 
+      if (!parentManager) return
+
       const disposeParentOnChange = parentManager.onChangeTheme(() => {
         if (themeManager.update(props)) {
           if (uuid && !themeManager.isTracking(uuid)) {
@@ -266,6 +271,7 @@ export const useChangeThemeEffect = (
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
       didChange,
+      parentManager,
       themes,
       themeManager.getKey(),
       componentName,
@@ -283,7 +289,7 @@ export const useChangeThemeEffect = (
     }),
     ...themeManager.state,
     className:
-      themeManager.state.className === parentManager.state.className
+      themeManager.state.className === parentManager?.state.className
         ? undefined
         : themeManager.state.className,
     themes,
