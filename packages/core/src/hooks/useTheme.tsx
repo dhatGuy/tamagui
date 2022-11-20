@@ -49,6 +49,7 @@ export const useTheme = (props: UseThemeProps = { name: null }): ThemeParsed => 
   if (process.env.NODE_ENV === 'development') {
     // ensure we aren't creating too many ThemeManagers
     if (didChange && className === themeManager?.parentManager?.state.className) {
+      // eslint-disable-next-line no-console
       console.error(`Should always change, duplicating ThemeMananger bug`, themeManager)
     }
   }
@@ -300,7 +301,7 @@ export const useChangeThemeEffect = (
     if (props.debug) {
       // prettier-ignore
       // eslint-disable-next-line no-console
-      console.log('useChangeThemeEffect', props.name, props.componentName, didChange, themeManager.state.name, themeManager.state.className)
+      console.log('useChangeThemeEffect', props.name, props.componentName, didChange, themeManager.state.name, themeManager.state.className, themeManager.parentManager?.state.className)
     }
   }
 

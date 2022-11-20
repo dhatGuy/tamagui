@@ -197,12 +197,16 @@ function getNextThemeState(
   let nextName = parentManager?.props?.reset ? parentName || '' : props.name || ''
 
   const parentParts = parentName.split(THEME_NAME_SEPARATOR)
-  const prefixes = parentParts
-    .map((_, i) => {
-      return parentParts.slice(0, i + 1).join(THEME_NAME_SEPARATOR)
-    })
-    // most specific first
-    .reverse()
+
+  // components look for specific, others fallback upwards
+  const prefixes = props.componentName
+    ? [parentName]
+    : parentParts
+        .map((_, i) => {
+          return parentParts.slice(0, i + 1).join(THEME_NAME_SEPARATOR)
+        })
+        // most specific first
+        .reverse()
 
   const potentialComponent = props.componentName
     ? nextName
@@ -216,7 +220,7 @@ function getNextThemeState(
     if (potentialComponent && nextName) {
       res.push([prefix, nextName, potentialComponent].join(THEME_NAME_SEPARATOR))
     }
-    if (nextName) {
+    if (!potentialComponent && nextName) {
       res.push([prefix, nextName].join(THEME_NAME_SEPARATOR))
     }
     if (potentialComponent) {
@@ -225,7 +229,7 @@ function getNextThemeState(
     return res
   })
 
-  let potentials = [...newPotentials, nextName]
+  let potentials = nextName ? [...newPotentials, nextName] : newPotentials
   if (props.inverse) {
     potentials = potentials.map(inverseTheme)
   }
