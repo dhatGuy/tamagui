@@ -37,7 +37,7 @@ import { useShallowSetState } from './helpers/useShallowSetState'
 import { getRect, measureLayout, useElementLayout } from './hooks/useElementLayout'
 import { addMediaQueryListener, getInitialMediaState } from './hooks/useMedia'
 import { useServerRef, useServerState } from './hooks/useServerHooks'
-import { getThemeManager, useTheme } from './hooks/useTheme'
+import { getThemeDidChange, getThemeManager, useTheme } from './hooks/useTheme'
 import {
   DebugProp,
   SpaceDirection,
@@ -168,6 +168,8 @@ export function createComponent<
       undefined as any as {
         hasAnimated?: boolean
         hasThemeInversed?: boolean
+        hasProvidedThemeManager?: boolean
+        themeShouldReset?: boolean
       }
     )
     stateRef.current ??= {}
@@ -817,12 +819,18 @@ export function createComponent<
     }
 
     const themeManager = getThemeManager(theme)
-    const shouldSetChildrenThemeToParent = Boolean(
-      themeShallow && themeManager && themeManager.didChangeTheme
-    )
+    const themeDidChange = getThemeDidChange(theme)
+    const themeShouldReset = Boolean(themeShallow && themeManager && themeDidChange)
 
-    const shouldProvideThemeManager =
-      shouldSetChildrenThemeToParent || (themeManager && !themeManager.didChangeTheme)
+    const shouldProvideThemeManager = themeShouldReset || (themeManager && themeDidChange)
+
+    // memoize to avoid re-parenting
+    if (shouldProvideThemeManager) {
+      stateRef.current.hasProvidedThemeManager = true
+    }
+    if (themeShouldReset) {
+      stateRef.current.themeShouldReset = true
+    }
 
     const childEls =
       !children || asChild
@@ -836,8 +844,8 @@ export function createComponent<
               isZStack,
             }),
             // only set context if changed theme
-            shouldProvideThemeManager ? themeManager : undefined,
-            shouldSetChildrenThemeToParent
+            stateRef.current.hasProvidedThemeManager ? themeManager : undefined,
+            stateRef.current.themeShouldReset
           )
 
     let content: any

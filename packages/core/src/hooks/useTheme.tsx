@@ -14,7 +14,8 @@ import { useServerRef } from './useServerHooks'
 interface UseThemeState {
   uuid: Object
   keys: Set<string>
-  isRendering: boolean
+  isRendering?: boolean
+  hasEverChanged?: boolean
 }
 
 type UseThemeProps = ThemeProps & {
@@ -37,11 +38,10 @@ export const useTheme = (props: UseThemeProps = { name: null }): ThemeParsed => 
     state.current = {
       uuid: {},
       keys: new Set(),
-      isRendering: true,
     }
   }
 
-  const { name, theme, themes, themeManager, className } = useChangeThemeEffect(
+  const { name, theme, themes, themeManager, className, didChange } = useChangeThemeEffect(
     props,
     state.current.uuid
   )
@@ -86,6 +86,7 @@ export const useTheme = (props: UseThemeProps = { name: null }): ThemeParsed => 
 
   return useMemo(() => {
     return getThemeProxied({
+      didChange,
       theme,
       name,
       className,
@@ -103,7 +104,7 @@ export const useTheme = (props: UseThemeProps = { name: null }): ThemeParsed => 
         }
       },
     })
-  }, [theme, name, className, themeManager, debug, disableTracking])
+  }, [theme, didChange, name, className, themeManager, debug, disableTracking])
 }
 
 function getThemeProxied({
@@ -112,12 +113,14 @@ function getThemeProxied({
   className,
   themeManager,
   onStringKeyAccess,
+  didChange,
 }: {
   theme: any
   name: string
   onStringKeyAccess?: (cb: string) => void
   className?: string
   themeManager?: ThemeManager | null
+  didChange?: boolean
 }) {
   return createProxy(theme, {
     has(_, key) {
@@ -137,6 +140,9 @@ function getThemeProxied({
       }
       if (key === GetThemeManager) {
         return themeManager
+      }
+      if (key === GetDidChange) {
+        return didChange
       }
       if (key === 'name') {
         return name
@@ -161,11 +167,10 @@ function getThemeProxied({
 }
 
 const GetThemeManager = Symbol()
+const GetDidChange = Symbol()
 
-export const getThemeManager = (theme: any): ThemeManager | undefined => {
-  if (!theme) return
-  return theme[GetThemeManager]
-}
+export const getThemeManager = (theme: any): ThemeManager | undefined => theme?.[GetThemeManager]
+export const getThemeDidChange = (theme: any): ThemeManager | undefined => theme?.[GetDidChange]
 
 export function useThemeName(opts?: { parent?: true }): ThemeName {
   if (isRSC) {
@@ -196,6 +201,7 @@ export const useChangeThemeEffect = (
   themes: Record<string, ThemeParsed>
   themeManager: ThemeManager | null
   name: string
+  didChange?: boolean
   theme?: ThemeParsed | null
   className?: string
 } => {
@@ -235,8 +241,9 @@ export const useChangeThemeEffect = (
 
   // not concurrent safe but fixes native (but breaks SSR and not needed on web (i think) so leave only on native)
   const didChange = Boolean(
-    themeManager.parentManager && themeManager.getKey() !== themeManager.parentManager.getKey()
+    themeManager.parentManager && themeManager !== themeManager.parentManager
   )
+  console.log('didChange', didChange)
   if (process.env.TAMAGUI_TARGET === 'native') {
     if (didChange) {
       themeManager.update(props, false, false)
@@ -283,6 +290,7 @@ export const useChangeThemeEffect = (
   }
 
   return {
+    didChange,
     ...(parentManager && {
       name: parentManager.state.name,
       theme: parentManager.state.theme,

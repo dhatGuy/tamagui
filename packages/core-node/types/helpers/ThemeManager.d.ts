@@ -26,7 +26,6 @@ export declare class ThemeManager {
     state: ThemeManagerState;
     constructor(ogParentManager?: ThemeManager | "root" | null | undefined, props?: ThemeProps | undefined, debug?: any);
     get allKeys(): Set<string>;
-    get didChangeTheme(): boolean | null;
     get parentName(): string | null;
     get fullName(): string;
     getValue(key: string): import("..").Variable<any> | undefined;

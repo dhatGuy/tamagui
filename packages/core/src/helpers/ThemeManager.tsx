@@ -64,10 +64,6 @@ export class ThemeManager {
     return this.#allKeys
   }
 
-  get didChangeTheme() {
-    return this.originalParentManager && this.fullName !== this.originalParentManager.fullName
-  }
-
   get parentName() {
     return this.parentManager?.state.name || null
   }

@@ -12,12 +12,11 @@ export function wrapThemeManagerContext(
   shouldReset?: boolean
 ) {
   // be sure to memoize shouldReset to avoid reparenting
-  const next =
-    shouldReset && themeManager ? (
-      <Theme name={themeManager.parentName}>{children}</Theme>
-    ) : (
-      children
-    )
+  let next = children
+  // reset to parent theme
+  if (shouldReset && themeManager) {
+    next = <Theme name={themeManager.parentName}>{next}</Theme>
+  }
   // be sure to memoize themeManager to avoid reparenting
   if (!themeManager) {
     return next
