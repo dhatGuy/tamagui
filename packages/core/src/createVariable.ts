@@ -8,7 +8,7 @@ import { getConfig } from './config'
  * Moving to objects for React Server Components support
  */
 
-const IS_VAR = '__isVar__'
+const IS_VAR = 'isVar'
 
 type VariableIn<A = any> = {
   val: A

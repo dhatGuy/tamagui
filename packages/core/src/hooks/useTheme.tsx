@@ -248,6 +248,7 @@ export const useChangeThemeEffect = (
   }, [])
 
   const didCreate = Boolean(themeManager !== parentManager)
+
   const didUpdate = useMemo(() => {
     if (!didCreate) {
       return false
@@ -279,8 +280,10 @@ export const useChangeThemeEffect = (
       if (!parentManager) return
 
       const disposeParentOnChange = parentManager.onChangeTheme(() => {
+        const before = { ...themeManager.state }
         const didUpdate = themeManager.updateState(props)
         if (didUpdate) {
+          console.warn('changed', before, { ...themeManager.state })
           forceUpdate()
         }
       })

@@ -72,7 +72,7 @@ export class ThemeManager {
       return true
     }
     if (shouldTryUpdate) {
-      const nextState = this.getState(props)
+      const nextState = this.#getStateIfChanged(props)
       if (nextState) {
         this.state = nextState
         notify && this.notify()
@@ -82,12 +82,15 @@ export class ThemeManager {
     return false
   }
 
-  getState(props: ThemeProps | undefined = this.props): ThemeManagerState | null {
+  #getStateIfChanged(props: ThemeProps | undefined = this.props): ThemeManagerState | null {
     if (!props) {
       return null
     }
     const next = getNextThemeState(props, this.parentManager)
     if (!next || !next.theme) {
+      return null
+    }
+    if (next.theme === this.state.theme) {
       return null
     }
     if (this.parentManager && next && next.theme === this.parentManager.state.theme) {

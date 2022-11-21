@@ -25,7 +25,6 @@ export declare class ThemeManager {
     updateState(props?: ThemeProps & {
         forceTheme?: ThemeParsed;
     }, forceUpdate?: boolean, notify?: boolean): boolean;
-    getState(props?: ThemeProps | undefined): ThemeManagerState | null;
     get allKeys(): Set<string>;
     get parentName(): string | null;
     get fullName(): string;
