@@ -26,27 +26,28 @@ type ThemeManagerState = {
 const emptyState: ThemeManagerState = { name: '-' }
 
 export class ThemeManager {
-  keys = new Map<any, Set<string>>()
+  keys = new Map<string, Set<string> | undefined>()
   themeListeners = new Set<ThemeListener>()
-  originalParentManager: ThemeManager | null = null
+  ogParentManager: ThemeManager | null = null
   parentManager: ThemeManager | null = null
   state: ThemeManagerState = emptyState
 
   constructor(
-    ogParentManager?: ThemeManager | 'root' | null | undefined,
-    public props?: ThemeProps
+    parentManagerIn?: ThemeManager | 'root' | null | undefined,
+    public props?: ThemeProps,
+    public ref?: any
   ) {
-    if (ogParentManager && ogParentManager !== 'root') {
-      this.originalParentManager = ogParentManager
+    if (parentManagerIn && parentManagerIn !== 'root') {
+      this.ogParentManager = parentManagerIn
     }
-    if (ogParentManager === 'root') {
+    if (parentManagerIn === 'root') {
       this.updateState(props, false, false)
       return
     }
-    this.parentManager = ogParentManager || null
+    this.parentManager = parentManagerIn || null
     const didUpdate = this.updateState(props, false, false)
-    if (!didUpdate && ogParentManager) {
-      return ogParentManager
+    if (!didUpdate && parentManagerIn) {
+      return parentManagerIn
     }
   }
 
@@ -115,7 +116,7 @@ export class ThemeManager {
   get allKeys() {
     if (!this.#allKeys) {
       this.#allKeys = new Set([
-        ...(this.originalParentManager?.allKeys || []),
+        ...(this.ogParentManager?.allKeys || []),
         ...Object.keys(this.state.theme || {}),
       ])
     }
@@ -143,12 +144,11 @@ export class ThemeManager {
     }
   }
 
-  isTracking(uuid: Object) {
+  isTracking(uuid: string) {
     return Boolean(this.keys.get(uuid)?.size)
   }
 
   track(uuid: any, keys: Set<string>) {
-    if (!this.state.name) return
     this.keys.set(uuid, keys)
   }
 
