@@ -215,7 +215,6 @@ export const ExampleAnimations = memo(() => {
                 })}
                 theme={isActive ? 'active' : 'alt2'}
                 px="$4"
-                debug
                 py="$2"
                 title={item.name}
                 subTitle={item.description}
