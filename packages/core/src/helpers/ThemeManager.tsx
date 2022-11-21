@@ -57,10 +57,10 @@ export class ThemeManager {
   ) {
     let shouldTryUpdate = forceUpdate || !this.parentManager
     if (!shouldTryUpdate) {
-      const nextKey = this.getKey(props)
+      const nextKey = this.#getPropsKey(props)
       if (
-        (this.parentManager && nextKey !== this.parentManager.getKey()) ||
-        this.getKey() !== nextKey
+        (this.parentManager && nextKey !== this.parentManager.#getPropsKey()) ||
+        this.#getPropsKey() !== nextKey
       ) {
         shouldTryUpdate = true
       }
@@ -96,18 +96,15 @@ export class ThemeManager {
     return next
   }
 
-  #key: string | null = null
-  getKey(props: ThemeProps | undefined = this.props) {
+  #getPropsKey(props: ThemeProps | undefined = this.props) {
     if (!props) {
       if (process.env.NODE_ENV === 'development') {
-        throw new Error(`No props given to ThemeManager.getKey()`)
+        throw new Error(`No props given to ThemeManager.getPropsKey()`)
       }
       return ``
     }
-    if (this.#key) return this.#key
     const { name, inverse, reset, componentName } = props
     const key = `${name || 0}${inverse || 0}${reset || 0}${componentName || 0}`
-    this.#key ??= key
     return key
   }
 
@@ -200,10 +197,6 @@ function getNextThemeState(
         .reverse()
 
   const potentialComponent = props.componentName
-    ? nextName
-      ? `${withoutComponentName(nextName)}_${props.componentName}`
-      : props.componentName
-    : null
 
   // order important (most specific to least)
   const newPotentials = prefixes.flatMap((prefix) => {
@@ -220,6 +213,12 @@ function getNextThemeState(
     return res
   })
 
+  if (potentialComponent && nextName) {
+    for (const prefix of prefixes) {
+      newPotentials.push([prefix, nextName].join(THEME_NAME_SEPARATOR))
+    }
+  }
+
   let potentials = nextName ? [...newPotentials, nextName] : newPotentials
   if (props.inverse) {
     potentials = potentials.map(inverseTheme)
@@ -230,6 +229,17 @@ function getNextThemeState(
       nextName = name
       break
     }
+  }
+
+  if (props.debug) {
+    console.log('ThemeManager.getState', {
+      props,
+      potentialComponent,
+      nextName,
+      prefixes,
+      newPotentials,
+      parentParts,
+    })
   }
 
   const theme = themes[nextName]
