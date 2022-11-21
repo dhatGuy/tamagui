@@ -62,7 +62,6 @@ export function HeroExampleAnimations({ animationCode }) {
             elevation="$4"
             br="$4"
             theme={tint}
-            debug
           >
             <ExampleAnimations />
           </YStack>
