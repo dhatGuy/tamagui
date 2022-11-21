@@ -280,10 +280,9 @@ export const useChangeThemeEffect = (
       if (!parentManager) return
 
       const disposeParentOnChange = parentManager.onChangeTheme(() => {
-        const before = { ...themeManager.state }
         const didUpdate = themeManager.updateState(props)
         if (didUpdate) {
-          console.warn('changed', before, { ...themeManager.state })
+          console.warn('changed')
           forceUpdate()
         }
       })

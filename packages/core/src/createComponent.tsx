@@ -210,14 +210,6 @@ export function createComponent<
         if (!isServer) {
           // eslint-disable-next-line no-console
           console.log(`state`, state)
-          // eslint-disable-next-line no-console
-          console.groupCollapsed('props')
-          // eslint-disable-next-line no-console
-          console.log(props)
-          // eslint-disable-next-line no-console
-          console.log('order', Object.keys(props))
-          // eslint-disable-next-line no-console
-          console.groupEnd()
         }
       }
     }
