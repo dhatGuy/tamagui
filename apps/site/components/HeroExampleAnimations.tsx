@@ -205,7 +205,7 @@ export const ExampleAnimations = memo(() => {
 
       <YStack pos="relative" $sm={{ display: 'none' }} width="40%">
         <YStack f={1} theme="alt2" bc="$backgroundPress">
-          {animationDescriptions.slice(0, 1).map((item, i) => {
+          {animationDescriptions.map((item, i) => {
             const isActive = item === animation
             return (
               <ListItem
