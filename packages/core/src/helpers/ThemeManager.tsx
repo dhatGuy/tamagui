@@ -4,7 +4,6 @@ import { getThemes } from '../config'
 import { THEME_CLASSNAME_PREFIX, THEME_NAME_SEPARATOR } from '../constants/constants'
 import { getThemeUnwrapped } from '../hooks/getThemeUnwrapped'
 import { ThemeParsed, ThemeProps } from '../types'
-import { inverseTheme } from '../views/ThemeInverse'
 
 type ThemeListener = (name: string | null, themeManager: ThemeManager) => void
 
@@ -249,6 +248,12 @@ function getNextThemeState(
     theme: getThemeUnwrapped(theme),
     className: getNextThemeClassName(nextName, props.inverse),
   }
+}
+
+const inverseTheme = (themeName: string) => {
+  return themeName.startsWith('light')
+    ? themeName.replace(/^light/, 'dark')
+    : themeName.replace(/^dark/, 'light')
 }
 
 export const ThemeManagerContext = createContext<ThemeManager | null>(null)
