@@ -4,7 +4,7 @@ export function ThemeInverseDemo() {
   return (
     <XStack space>
       <Buttons />
-      <Theme invert>
+      <Theme inverse>
         <Buttons />
       </Theme>
     </XStack>

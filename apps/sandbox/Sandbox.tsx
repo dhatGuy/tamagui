@@ -102,7 +102,7 @@ export const Sandbox = () => {
           {/* Theme reset + invert */}
           <Theme name="dark">
             <Theme reset>
-              <Theme invert>
+              <Theme inverse>
                 <Square bc="$background" size={100} />
               </Theme>
             </Theme>

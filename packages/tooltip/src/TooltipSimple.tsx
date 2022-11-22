@@ -29,7 +29,7 @@ export const TooltipSimple: React.FC<TooltipSimpleProps> = ({
   const contents = (
     <Tooltip {...tooltipProps}>
       <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
-      <Theme invert>
+      <Theme inverse>
         <Tooltip.Content
           zIndex={100_000}
           enterStyle={{ x: 0, y: -8, opacity: 0, scale: 0.93 }}
