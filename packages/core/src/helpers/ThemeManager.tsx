@@ -70,20 +70,24 @@ export class ThemeManager {
     }
   }
 
+  // #cache = new WeakMap()
   getStateIfChanged(props: ThemeProps | undefined = this.props): ThemeManagerState | null {
     if (!props) {
       return null
     }
+    // if (this.#cache.has(props)) {
+    //   return this.#cache.get(props)
+    // }
     const next = getNextThemeState(props, this.parentManager)
-    if (!next || !next.theme) {
+    if (
+      !next ||
+      !next.theme ||
+      next.theme === this.state.theme ||
+      (this.parentManager && next && next.theme === this.parentManager.state.theme)
+    ) {
       return null
     }
-    if (next.theme === this.state.theme) {
-      return null
-    }
-    if (this.parentManager && next && next.theme === this.parentManager.state.theme) {
-      return null
-    }
+    // this.#cache.set(props, next)
     return next
   }
 
@@ -200,12 +204,6 @@ function getNextThemeState(
       nextName = name
       break
     }
-  }
-
-  if (props.debug) {
-    // prettier-ignore
-    // eslint-disable-next-line no-console
-    console.log('ThemeManager.getState', { props, potentialComponent, nextName, prefixes, newPotentials, parentParts })
   }
 
   const theme = themes[nextName]

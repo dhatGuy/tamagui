@@ -79,6 +79,7 @@ inbox
 - animation accept useAnimatedStyle
 - Switch gesture
 - loadFont, loadAnimations
+- <Debug><...><Debug/> turns on debugging for all in tree and shows them nested
 - <Icon />
   - use theme values and size values
   - can swap for other icon packs (use createTamagui({ icons }))
