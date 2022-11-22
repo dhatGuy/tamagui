@@ -36,8 +36,7 @@
     "@tamagui/react-native-use-responder-events": "^1.0.1-beta.219",
     "@tamagui/types-react-native": "^1.0.1-beta.219",
     "@tamagui/use-did-finish-ssr": "^1.0.1-beta.219",
-    "@tamagui/use-event": "^1.0.1-beta.219",
-    "@tamagui/use-force-update": "^1.0.1-beta.219"
+    "@tamagui/use-event": "^1.0.1-beta.219"
   },
   "peerDependencies": {
     "react": ">=18",
