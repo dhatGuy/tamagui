@@ -163,9 +163,11 @@ export class ThemeManager {
   }
 }
 
-function getNextThemeClassName(name: string, disableRemoveScheme = false) {
+function getNextThemeClassName(name: string, isInverting = false) {
   const next = `${THEME_CLASSNAME_PREFIX}${name}`
-  if (disableRemoveScheme) return next
+  if (isInverting) {
+    return next
+  }
   return next.replace('light_', '').replace('dark_', '')
 }
 
@@ -175,16 +177,17 @@ function getNextThemeState(
 ): ThemeManagerState | null {
   const themes = getThemes()
 
-  if (props.reset && props.name) {
-    return {
-      name: props.name,
-      theme: themes[props.name] as ThemeParsed,
-      className: getNextThemeClassName(props.name),
-    }
+  if (props.name && props.reset) {
+    throw new Error(`Cannot reset and also set a new name`)
+  }
+  if (props.reset && !parentManager?.parentManager) {
+    throw new Error(`Cannot reset theme if no grandparent theme exists`)
   }
 
   const parentName = parentManager?.state.name || ''
-  let nextName = parentManager?.props?.reset ? parentName || '' : props.name || ''
+  let nextName = props.reset
+    ? parentManager?.parentManager?.state.name || ''
+    : props.name || parentManager?.state.name || ''
 
   const parentParts = parentName.split(THEME_NAME_SEPARATOR)
 
@@ -234,14 +237,9 @@ function getNextThemeState(
   }
 
   if (props.debug) {
-    console.log('ThemeManager.getState', {
-      props,
-      potentialComponent,
-      nextName,
-      prefixes,
-      newPotentials,
-      parentParts,
-    })
+    // prettier-ignore
+    // eslint-disable-next-line no-console
+    console.log('ThemeManager.getState', { props, potentialComponent, nextName, prefixes, newPotentials, parentParts })
   }
 
   const theme = themes[nextName]
@@ -249,7 +247,7 @@ function getNextThemeState(
   return {
     name: nextName,
     theme: getThemeUnwrapped(theme),
-    className: getNextThemeClassName(nextName, !!props.inverse),
+    className: getNextThemeClassName(nextName, props.inverse),
   }
 }
 
