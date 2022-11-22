@@ -225,7 +225,6 @@ export function createComponent<
       componentName,
       reset: props.reset,
       forceUpdate,
-      disableTracking: !noClassNames,
       inverse: props.themeInverse,
       // disableThemeClass: noClassNames,
       debug: props.debug,

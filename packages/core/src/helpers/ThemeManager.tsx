@@ -1,4 +1,3 @@
-import { isWeb } from '@tamagui/constants'
 import { createContext } from 'react'
 
 import { getThemes } from '../config'
